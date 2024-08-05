@@ -88,4 +88,22 @@ JsonNode *parse_json(char *json_string);
 // Checks if a null terminated string is valid json or not
 bool validate_json(char *json_string);
 
+// Takes in a buffer and tries to dump the json to that buffer, will add a null terminator
+// Returns true if the dump was successful
+// If the buffer is too small it will return false
+// Returns false on other failures
+bool json_dump(JsonNode *root, char *buf, int buf_size);
+
+// Takes in a buffer and tries to dump the json to that buffer with pretty printing, will add a null terminator
+// Returns true if the dump was successful
+// If the buffer is too small it will return false
+// Returns false on other failures
+bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size);
+
+// Gets the length of the string from dumping a json node
+int json_node_str_len(JsonNode *json_node);
+
+// Gets the length of the string from dumping a json node with pretty printing
+int json_node_pretty_str_len(JsonNode *json_node, int indent);
+
 #endif

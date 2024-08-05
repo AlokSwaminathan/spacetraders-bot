@@ -49,9 +49,8 @@ typedef enum JsonDataType {
   JSON_TYPE_STRING,     // 2
   JSON_TYPE_OBJECT,     // 3
   JSON_TYPE_ARRAY,      // 4
-  JSON_TYPE_ROOT,       // 5
-  JSON_TYPE_NULL,       // 6
-  JSON_TYPE_BOOL,       // 7
+  JSON_TYPE_NULL,       // 5
+  JSON_TYPE_BOOL,       // 6
 } JsonDataType;
 
 typedef struct JsonNode JsonNode;
@@ -60,7 +59,11 @@ typedef struct JsonNode {
   JsonNode *prev;
   JsonNode *next;
   JsonDataType type;
-  uint32_t value_len;
+  // If array or object then their respective number of children, otherwise, the length of the values string representation
+  union {
+    uint32_t ele_count;
+    uint32_t val_strlen;
+  };
   bool is_array_ele;
   char *key;
   union {
@@ -73,12 +76,12 @@ typedef struct JsonNode {
   };
 } JsonNode;
 
-// Takes the ROOT node and frees the object
-// Does nothing if node is not of type ROOT
-void free_json(JsonNode *json_root);
+// Checks if NULL
+// Frees node and all of its children and data (if there are any)
+void free_json(JsonNode *root);
 
 // Takes in a full JSON string (null terminated)
-// Returns a pointer to the ROOT JsonNode
+// Returns a pointer to the root JsonNode
 // Returns NULL if any errors occurred
 JsonNode *parse_json(char *json_string);
 

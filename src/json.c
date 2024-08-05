@@ -19,21 +19,22 @@ char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
 char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
 char JSON_FALSE_STR[] = {'f', 'a', 'l', 's', 'e'};
 
-void free_json(JsonNode *json_root) {
-  if (json_root == NULL) return;
-
-  if (json_root->type != JSON_TYPE_ROOT) {
-    return;
+void free_json(JsonNode *json_node) {
+  if (json_node == NULL) return;
+  free(json_node->key);
+  if (json_node->type == JSON_TYPE_STRING) {
+    free(json_node->value_str);
   }
-
-  for (JsonNode *curr = json_root->child; curr->next != NULL; curr = curr->next) {
-    if (curr->type == JSON_TYPE_OBJECT) {
-      curr->type = JSON_TYPE_ROOT;
+  if (json_node->type == JSON_TYPE_OBJECT || json_node->type == JSON_TYPE_ARRAY) {
+    JsonNode *curr = json_node->child;
+    JsonNode *next;
+    for (uint32_t i = 0; i < json_node->ele_count; i++) {
+      next = curr->next;
       free_json(curr);
-    } else {
-      free(curr->value_void);
+      curr = next;
     }
   }
+  free(json_node);
 }
 
 JsonNode *parse_json(char *json_string) {
@@ -41,19 +42,21 @@ JsonNode *parse_json(char *json_string) {
 
   JsonNode *root = json_node_default();
   if (root == NULL) return NULL;
-  root->type = JSON_TYPE_ROOT;
-  root->child = json_node_default();
-  if (root->child == NULL) return NULL;
-  root->child->parent = root;
 
   JSON_READ_WHITESPACE(json_string);
 
-  json_string = json_parse_symbol(json_string, root->child);
-  if (json_string == NULL) return NULL;
+  json_string = json_parse_symbol(json_string, root);
+  if (json_string == NULL) {
+    free(root);
+    return NULL;
+  }
 
   JSON_READ_WHITESPACE(json_string);
 
-  if (*json_string != '\0') return NULL;
+  if (*json_string != '\0') {
+    free_json(root);
+    return NULL;
+  }
   return root;
 }
 
@@ -86,7 +89,7 @@ char *json_parse_symbol(char *json_string, JsonNode *json_node) {
 char *json_parse_object(char *json_string, JsonNode *json_node) {
   // Set up node
   json_node->type = JSON_TYPE_OBJECT;
-  json_node->value_len = 0;
+  json_node->ele_count = 0;
 
   json_string++;
   JsonNode *prev = NULL;
@@ -107,7 +110,10 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
 
     char *ret = json_parse_kv_pair(json_string, curr);
 
-    if (ret == NULL) return NULL;
+    if (ret == NULL) {
+      free(curr);
+      return NULL;
+    }
     json_string = ret;
 
     curr->prev = prev;
@@ -117,7 +123,7 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
       json_node->child = curr;
     prev = curr;
 
-    json_node->value_len++;
+    json_node->ele_count++;
 
     JSON_READ_WHITESPACE(json_string);
     if (*json_string == JSON_RC_BRACKET) return json_string + 1;
@@ -135,6 +141,7 @@ char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
     return NULL;
   }
   json_string++;
+  JSON_READ_WHITESPACE(json_string);
   return json_parse_symbol(json_string, json_node);
 }
 
@@ -149,7 +156,7 @@ char *json_parse_key(char *json_string, JsonNode *json_node) {
 char *json_parse_array(char *json_string, JsonNode *json_node) {
   // Set up node
   json_node->type = JSON_TYPE_ARRAY;
-  json_node->value_len = 0;
+  json_node->ele_count = 0;
   json_node->child = NULL;
 
   json_string++;
@@ -169,7 +176,10 @@ char *json_parse_array(char *json_string, JsonNode *json_node) {
     curr->parent = json_node;
 
     char *ret = json_parse_symbol(json_string, curr);
-    if (ret == NULL) return NULL;
+    if (ret == NULL) {
+      free(curr);
+      return NULL;
+    }
 
     curr->prev = prev;
     if (prev != NULL)
@@ -178,7 +188,7 @@ char *json_parse_array(char *json_string, JsonNode *json_node) {
       json_node->child = curr;
     prev = curr;
 
-    json_node->value_len++;
+    json_node->ele_count++;
     json_string = ret;
 
     JSON_READ_WHITESPACE(json_string);
@@ -261,7 +271,7 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
     str[i] = c;
   }
   str[len] = '\0';
-  json_node->value_len = 1;
+  json_node->val_strlen = len;
   json_node->type = JSON_TYPE_STRING;
   json_node->value_str = str;
   return json_string + 1;
@@ -287,19 +297,29 @@ char *json_parse_num(char *json_string, JsonNode *json_node) {
     }
     uint8_t digit = *json_string - '0';
     if (is_double) {
-      d += digit*pow(10, -digits);
+      d += digit * pow(10, -digits);
     } else {
       l *= 10;
       l += digit;
     }
   }
   if (digits == 0) return NULL;
-  if (is_negative) {
+
+  if (!is_double) d = l;
+
+  if (d < 1)
+    json_node->val_strlen = 1;
+  else
+    json_node->val_strlen = log10(d) + 1;
+
+  if (is_negative && d != 0.0) {
     l *= -1;
     d *= -1;
+    json_node->val_strlen++;
   }
-  json_node->value_len = 1;
+
   if (is_double) {
+    json_node->val_strlen += digits;
     json_node->type = JSON_TYPE_DOUBLE;
     json_node->value_double = d;
   } else {
@@ -327,12 +347,14 @@ char *json_parse_literal(char *json_string, JsonNode *json_node) {
     literal_str = JSON_NULL_STR;
     sz = sizeof(JSON_NULL_STR);
     json_node->type = JSON_TYPE_NULL;
+    json_node->value_void = NULL;
   } else {
     return NULL;
   }
   for (int i = 0; i < sz; i++) {
     if (*(json_string + i) != literal_str[i]) return NULL;
   }
+  json_node->val_strlen = sz;
   return json_string + sz;
 }
 
@@ -343,7 +365,7 @@ JsonNode *json_node_default(void) {
   node->prev = NULL;
   node->next = NULL;
   node->value_void = NULL;
-  node->value_len = 1;
+  node->ele_count = 0;
   node->is_array_ele = false;
   node->key = NULL;
   return node;

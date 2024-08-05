@@ -19,6 +19,14 @@
 #define JSON_COMMA ','
 #define JSON_COLON ':'
 
+#define JSON_NEWLINE '\n'
+#define JSON_BACKSLASH '\\'
+#define JSON_TAB '\t'
+#define JSON_FSLASH '/'
+#define JSON_CARRIAGE_RET '\r'
+#define JSON_BACKSPACE '\b'
+#define JSON_FORMFEED '\f'
+
 // Special characters
 #define JSON_SPECIAL_START '\\'
 #define JSON_SPECIAL_NEWLINE 'n'
@@ -29,6 +37,8 @@
 #define JSON_SPECIAL_CARRIAGE_RET 'r'
 #define JSON_SPECIAL_TAB 't'
 #define JSON_SPECIAL_BACKSPACE 'b'
+
+#define JSON_IS_SPECIAL_CHAR(c) (c == JSON_BACKSLASH || c == JSON_NEWLINE || c == JSON_D_QUOTE || c == JSON_FSLASH || c == JSON_FORMFEED || c == JSON_CARRIAGE_RET || c == JSON_TAB || c == JSON_BACKSPACE)
 
 #define JSON_IS_WHITESPACE(c) (c == ' ' || c == '\n' || c == '\t' || c == '\r')
 #define JSON_IS_NUM_START(c) ((c >= '0' && c <= '9') || c == '.' || c == '-')
@@ -60,6 +70,8 @@ typedef struct JsonNode {
   JsonNode *next;
   JsonDataType type;
   // If array or object then their respective number of children, otherwise, the length of the values string representation
+  // For strings this is not the number of characters, because this accounts for special characters being more than 1 character
+  // Use strlen(node->value_str) to get the length of the string
   union {
     uint32_t ele_count;
     uint32_t val_strlen;

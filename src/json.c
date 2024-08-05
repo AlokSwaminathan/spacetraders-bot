@@ -237,6 +237,7 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
   if (!valid_ret) return NULL;
 
   // Actually parse the string
+  char *start = json_string;
   char *str = malloc(sizeof(char) * (len + 1));
   for (int i = 0; i < len; i++, json_string++) {
     char c = *json_string;
@@ -276,7 +277,11 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
     str[i] = c;
   }
   str[len] = '\0';
-  json_node->val_strlen = len;
+  json_node->val_strlen = 0;
+  for (char* c = str; *c != '\0'; c++ ) {
+    if (JSON_IS_SPECIAL_CHAR(*c)) json_node->val_strlen++;
+    json_node->val_strlen++;
+  }
   json_node->type = JSON_TYPE_STRING;
   json_node->value_str = str;
   return json_string + 1;
@@ -410,14 +415,42 @@ char *json_dump_node(JsonNode *json_node, char *buf) {
         curr = curr->next;
       }
       buf[0] = end;
-      return buf+1;
+      return buf + 1;
       break;
     }
     case JSON_TYPE_STRING:
       buf[0] = JSON_D_QUOTE;
-      memcpy(buf + 1, json_node->value_str, json_node->val_strlen);
-      buf[json_node->val_strlen + 1] = JSON_D_QUOTE;
-      return buf + json_node->val_strlen + 2;
+      buf++;
+      int len = strlen(json_node->value_str);
+      for (int i = 0; i < len; i++) {
+        char c = json_node->value_str[i];
+        if (JSON_IS_SPECIAL_CHAR(c)) {
+          buf[0] = JSON_BACKSLASH;
+          buf++;
+          if (c == JSON_NEWLINE)
+            buf[0] = JSON_SPECIAL_NEWLINE;
+          else if (c == JSON_D_QUOTE)
+            buf[0] = JSON_SPECIAL_QUOTE;
+          else if (c == JSON_BACKSLASH)
+            buf[0] = JSON_SPECIAL_BACKSLASH;
+          else if (c == JSON_FSLASH)
+            buf[0] = JSON_SPECIAL_FSLASH;
+          else if (c == JSON_FORMFEED)
+            buf[0] = JSON_SPECIAL_FORMFEED;
+          else if (c == JSON_CARRIAGE_RET)
+            buf[0] = JSON_SPECIAL_CARRIAGE_RET;
+          else if (c == JSON_TAB)
+            buf[0] = JSON_SPECIAL_TAB;
+          else if (c == JSON_BACKSPACE)
+            buf[0] = JSON_SPECIAL_BACKSPACE;
+          buf++;
+        } else {
+          buf[0] = c;
+          buf++;
+        }
+      }
+      buf[0] = JSON_D_QUOTE;
+      return buf + 1;
       break;
     case JSON_TYPE_LONG_LONG:
       snprintf(buf, json_node->val_strlen + 1, "%lld", json_node->value_ll);
@@ -430,8 +463,10 @@ char *json_dump_node(JsonNode *json_node, char *buf) {
         d *= -1;
         after_dec--;
       }
-      if (d >= 1) after_dec -= (int)log10(d)+1;
-      else after_dec--;
+      if (d >= 1)
+        after_dec -= (int)log10(d) + 1;
+      else
+        after_dec--;
       snprintf(buf, json_node->val_strlen + 1, "%.*f", after_dec, json_node->value_double);
       return buf + json_node->val_strlen;
       break;
@@ -480,7 +515,7 @@ int json_node_str_len(JsonNode *json_node) {
     case JSON_TYPE_DOUBLE:
     case JSON_TYPE_BOOL:
     case JSON_TYPE_NULL:
-      len = json_node->val_strlen;
+      len += json_node->val_strlen;
       break;
   }
   if (json_node->key != NULL) {

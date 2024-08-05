@@ -52,7 +52,7 @@ JsonNode *parse_json(char *json_string) {
 
   json_string = json_parse_symbol(json_string, root);
   if (json_string == NULL) {
-    free(root);
+    free_json(root);
     return NULL;
   }
 
@@ -131,11 +131,22 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
     json_node->ele_count++;
 
     JSON_READ_WHITESPACE(json_string);
-    if (*json_string == JSON_RC_BRACKET) return json_string + 1;
+    if (*json_string == JSON_RC_BRACKET) break;
     if (*json_string != JSON_COMMA) return NULL;
 
     json_string++;
   }
+  char* keys[json_node->ele_count];
+  curr = json_node->child;
+  for (int i = 0; curr != NULL; i++, curr = curr->next){
+    keys[i] = curr->key;
+    for (int j = 0; j < i; j++){
+      if (strcmp(keys[j],keys[i]) == 0){
+        return NULL;
+      }
+    }
+  }
+  return json_string + 1;
 }
 
 char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
@@ -237,7 +248,6 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
   if (!valid_ret) return NULL;
 
   // Actually parse the string
-  char *start = json_string;
   char *str = malloc(sizeof(char) * (len + 1));
   for (int i = 0; i < len; i++, json_string++) {
     char c = *json_string;
@@ -382,6 +392,7 @@ JsonNode *json_node_default(void) {
 }
 
 bool json_dump(JsonNode *root, char *buf, int buf_size) {
+  if (root == NULL) return false;
   int str_size = json_node_str_len(root);
   if (buf_size < str_size + 1) return false;
   char *end = json_dump_node(root, buf);

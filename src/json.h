@@ -50,13 +50,13 @@
 #define JSON_IS_TRUE_START(c) (c == 't')
 #define JSON_IS_FALSE_START(c) (c == 'f')
 #define JSON_IS_LITERAL_START(c) (JSON_IS_FALSE_START(c) || JSON_IS_TRUE_START(c) || JSON_IS_NULL_START(c))
-#define JSON_READ_WHITESPACE(str) \
+#define JSON_STRING_READ_WHITESPACE(str) \
   while (JSON_IS_WHITESPACE(*str) && *str != '\0') str++
 
-#define JSON_PAD_WHITESPACE(str, n) \
-  for (int _i = 0; _i < n; i++, str++) *str = ' '
+#define JSON_STRING_PAD_WHITESPACE(str, n) \
+  for (int _i = 0; _i < n; _i++, str++) *str = ' '
 
-#define JSON_ADD_NEWLINE(str) *(str++) = '\n';
+#define JSON_STRING_ADD_NEWLINE(str) *(str++) = '\n';
 
 typedef enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0
@@ -75,8 +75,7 @@ typedef struct JsonNode {
   JsonNode *next;
   JsonDataType type;
   // If array or object then their respective number of children, otherwise, the length of the values string representation
-  // For strings this is not the number of characters, because this accounts for special characters being more than 1 character
-  // Use strlen(node->value_str) to get the length of the string
+  // For strings this is the same as strlen
   union {
     uint32_t ele_count;
     uint32_t val_strlen;
@@ -115,7 +114,7 @@ bool json_dump(JsonNode *root, char *buf, int buf_size);
 // Returns true if the dump was successful
 // If the buffer is too small it will return false
 // Returns false on other failures
-bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size);
+bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size);
 
 // Gets the length of the string from dumping a json node
 int json_dump_str_len(JsonNode *json_node);

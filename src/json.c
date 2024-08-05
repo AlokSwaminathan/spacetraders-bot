@@ -15,6 +15,8 @@ char *json_parse_array(char *json_string, JsonNode *json_node);
 char *json_parse_literal(char *json_string, JsonNode *json_node);
 char *json_parse_symbol(char *json_string, JsonNode *json_node);
 
+int json_str_escaped_len(char *str);
+
 JsonNode *json_node_default(void);
 
 char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer);
@@ -49,7 +51,7 @@ JsonNode *parse_json(char *json_string) {
   JsonNode *root = json_node_default();
   if (root == NULL) return NULL;
 
-  JSON_READ_WHITESPACE(json_string);
+  JSON_STRING_READ_WHITESPACE(json_string);
 
   json_string = json_parse_symbol(json_string, root);
   if (json_string == NULL) {
@@ -57,7 +59,7 @@ JsonNode *parse_json(char *json_string) {
     return NULL;
   }
 
-  JSON_READ_WHITESPACE(json_string);
+  JSON_STRING_READ_WHITESPACE(json_string);
 
   if (*json_string != '\0') {
     free_json(root);
@@ -100,10 +102,10 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
   json_string++;
   JsonNode *prev = NULL;
   JsonNode *curr = NULL;
-  JSON_READ_WHITESPACE(json_string);
+  JSON_STRING_READ_WHITESPACE(json_string);
   if (*json_string == JSON_RC_BRACKET) return json_string + 1;
   while (true) {
-    JSON_READ_WHITESPACE(json_string);
+    JSON_STRING_READ_WHITESPACE(json_string);
     if (*json_string != JSON_D_QUOTE) return NULL;
 
     curr = json_node_default();
@@ -131,18 +133,18 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
 
     json_node->ele_count++;
 
-    JSON_READ_WHITESPACE(json_string);
+    JSON_STRING_READ_WHITESPACE(json_string);
     if (*json_string == JSON_RC_BRACKET) break;
     if (*json_string != JSON_COMMA) return NULL;
 
     json_string++;
   }
-  char* keys[json_node->ele_count];
+  char *keys[json_node->ele_count];
   curr = json_node->child;
-  for (int i = 0; curr != NULL; i++, curr = curr->next){
+  for (int i = 0; curr != NULL; i++, curr = curr->next) {
     keys[i] = curr->key;
-    for (int j = 0; j < i; j++){
-      if (strcmp(keys[j],keys[i]) == 0){
+    for (int j = 0; j < i; j++) {
+      if (strcmp(keys[j], keys[i]) == 0) {
         return NULL;
       }
     }
@@ -153,12 +155,12 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
 char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
   json_string = json_parse_key(json_string, json_node);
   if (json_string == NULL) return NULL;
-  JSON_READ_WHITESPACE(json_string);
+  JSON_STRING_READ_WHITESPACE(json_string);
   if (*json_string != JSON_COLON) {
     return NULL;
   }
   json_string++;
-  JSON_READ_WHITESPACE(json_string);
+  JSON_STRING_READ_WHITESPACE(json_string);
   return json_parse_symbol(json_string, json_node);
 }
 
@@ -180,7 +182,7 @@ char *json_parse_array(char *json_string, JsonNode *json_node) {
   JsonNode *prev = NULL;
   JsonNode *curr = NULL;
   while (true) {
-    JSON_READ_WHITESPACE(json_string);
+    JSON_STRING_READ_WHITESPACE(json_string);
     if (*json_string == '\0') return NULL;
 
     curr = json_node_default();
@@ -208,7 +210,7 @@ char *json_parse_array(char *json_string, JsonNode *json_node) {
     json_node->ele_count++;
     json_string = ret;
 
-    JSON_READ_WHITESPACE(json_string);
+    JSON_STRING_READ_WHITESPACE(json_string);
     if (*json_string == JSON_R_BRACKET) return json_string + 1;
     if (*json_string != JSON_COMMA) return NULL;
 
@@ -288,11 +290,7 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
     str[i] = c;
   }
   str[len] = '\0';
-  json_node->val_strlen = 0;
-  for (char* c = str; *c != '\0'; c++ ) {
-    if (JSON_IS_SPECIAL_CHAR(*c)) json_node->val_strlen++;
-    json_node->val_strlen++;
-  }
+  json_node->val_strlen = len;
   json_node->type = JSON_TYPE_STRING;
   json_node->value_str = str;
   return json_string + 1;
@@ -401,7 +399,7 @@ bool json_dump(JsonNode *root, char *buf, int buf_size) {
   return true;
 }
 
-bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size) {
+bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size) {
   if (root == NULL) return false;
   int str_size = json_node_str_len(root, indent, 0);
   if (buf_size < str_size + 1) return false;
@@ -411,13 +409,17 @@ bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size) {
 }
 
 char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
+  if (indent > -1) JSON_STRING_PAD_WHITESPACE(buf, layer * indent);
   if (json_node->key != NULL) {
-    int key_len = strlen(json_node->key);
-    buf[0] = JSON_D_QUOTE;
-    memcpy(buf + 1, json_node->key, key_len);
-    buf[key_len + 1] = JSON_D_QUOTE;
-    buf[key_len + 2] = JSON_COLON;
-    buf += key_len + 3;
+    JsonNode key_node = *json_node;
+    key_node.value_str = key_node.key;
+    key_node.key = NULL;
+    key_node.val_strlen = strlen(key_node.value_str);
+    key_node.type = JSON_TYPE_STRING;
+    buf = json_dump_node(&key_node, buf, -1, 0);
+    *buf = JSON_COLON;
+    buf++;
+    if (indent > -1) JSON_STRING_PAD_WHITESPACE(buf, 1);
   }
   switch (json_node->type) {
     case JSON_TYPE_OBJECT:
@@ -429,12 +431,23 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
         end = JSON_RC_BRACKET;
       }
       buf[0] = start;
+      buf++;
+      if (indent > -1) {
+        JSON_STRING_ADD_NEWLINE(buf);
+      }
       JsonNode *curr = json_node->child;
       while (curr != NULL) {
-        buf = json_dump_node(curr, buf + 1,indent,layer+1);
-        buf[0] = JSON_COMMA;
+        buf = json_dump_node(curr, buf, indent, layer + 1);
+        if (curr->next != NULL) {
+          buf[0] = JSON_COMMA;
+          buf++;
+        }
+        if (indent > -1) {
+          JSON_STRING_ADD_NEWLINE(buf);
+        }
         curr = curr->next;
       }
+      if (indent > -1) JSON_STRING_PAD_WHITESPACE(buf, layer * indent);
       buf[0] = end;
       return buf + 1;
       break;
@@ -442,7 +455,7 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
     case JSON_TYPE_STRING:
       buf[0] = JSON_D_QUOTE;
       buf++;
-      int len = strlen(json_node->value_str);
+      int len = json_node->val_strlen;
       for (int i = 0; i < len; i++) {
         char c = json_node->value_str[i];
         if (JSON_IS_SPECIAL_CHAR(c)) {
@@ -512,8 +525,8 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
 int json_node_str_len(JsonNode *json_node, int indent, int layer) {
   if (json_node == NULL) return 0;
   int len = 0;
-  if (indent > -1){
-    len += layer*indent;
+  if (indent > -1) {
+    len += layer * indent;
   }
   switch (json_node->type) {
     case JSON_TYPE_OBJECT:
@@ -521,17 +534,21 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
     case JSON_TYPE_ARRAY:
       len += (json_node->ele_count - 1);
       len += 2;
-      if (indent > -1){
-        len++; // Add new line after starting bracket
+      if (indent > -1) {
+        len++;  // Add new line after starting bracket
+        len += layer * indent; // Add indent before ending bracket
       }
       JsonNode *curr = json_node->child;
       while (curr != NULL) {
-        len += json_node_str_len(curr,indent,layer+1);
+        len += json_node_str_len(curr, indent, layer + 1);
         curr = curr->next;
+        if (indent > -1) len++;
       }
       break;
     case JSON_TYPE_STRING:
       len += 2;
+      len += json_str_escaped_len(json_node->value_str);
+      break;
     case JSON_TYPE_LONG_LONG:
     case JSON_TYPE_DOUBLE:
     case JSON_TYPE_BOOL:
@@ -540,17 +557,25 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
       break;
   }
   if (json_node->key != NULL) {
-    len += strlen(json_node->key) + 2;
+    len += 3; // Quotes and space after colon
+    len += json_str_escaped_len(json_node->key);
   }
-  if (indent > -1 && layer > 0) len += 1; // Newline
   return len;
 }
 
-
-int json_dump_str_len(JsonNode* root){
-  return json_node_str_len(root,INT32_MIN,0);
+int json_str_escaped_len(char *str) {
+  int len = 0;
+  for (char *c = str; *c != '\0'; c++) {
+    if (JSON_IS_SPECIAL_CHAR(*c)) len++;
+    len++;
+  }
+  return len;
 }
 
-int json_pretty_dump_str_len(JsonNode* root, int indent){
-  return json_node_str_len(root,indent,0);
+int json_dump_str_len(JsonNode *root) {
+  return json_node_str_len(root, INT32_MIN, 0);
+}
+
+int json_pretty_dump_str_len(JsonNode *root, int indent) {
+  return json_node_str_len(root, indent, 0);
 }

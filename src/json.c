@@ -17,8 +17,9 @@ char *json_parse_symbol(char *json_string, JsonNode *json_node);
 
 JsonNode *json_node_default(void);
 
-char *json_dump_node(JsonNode *json_node, char *buf);
-char *json_dump_node_pretty(JsonNode *json_node, int indent, char *buf);
+char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer);
+
+int json_node_str_len(JsonNode *json_node, int indent, int layer);
 
 char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
 char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
@@ -393,14 +394,23 @@ JsonNode *json_node_default(void) {
 
 bool json_dump(JsonNode *root, char *buf, int buf_size) {
   if (root == NULL) return false;
-  int str_size = json_node_str_len(root);
+  int str_size = json_node_str_len(root, -1, 0);
   if (buf_size < str_size + 1) return false;
-  char *end = json_dump_node(root, buf);
+  char *end = json_dump_node(root, buf, -1, 0);
   *end = '\0';
   return true;
 }
 
-char *json_dump_node(JsonNode *json_node, char *buf) {
+bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size) {
+  if (root == NULL) return false;
+  int str_size = json_node_str_len(root, indent, 0);
+  if (buf_size < str_size + 1) return false;
+  char *end = json_dump_node(root, buf, indent, 0);
+  *end = '\0';
+  return true;
+}
+
+char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
   if (json_node->key != NULL) {
     int key_len = strlen(json_node->key);
     buf[0] = JSON_D_QUOTE;
@@ -421,7 +431,7 @@ char *json_dump_node(JsonNode *json_node, char *buf) {
       buf[0] = start;
       JsonNode *curr = json_node->child;
       while (curr != NULL) {
-        buf = json_dump_node(curr, buf + 1);
+        buf = json_dump_node(curr, buf + 1,indent,layer+1);
         buf[0] = JSON_COMMA;
         curr = curr->next;
       }
@@ -499,24 +509,24 @@ char *json_dump_node(JsonNode *json_node, char *buf) {
   return NULL;
 }
 
-bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size) {
-  int str_size = json_node_pretty_str_len(root, indent);
-  if (buf_size < str_size) return false;
-  return true;
-}
-
-int json_node_str_len(JsonNode *json_node) {
+int json_node_str_len(JsonNode *json_node, int indent, int layer) {
   if (json_node == NULL) return 0;
   int len = 0;
+  if (indent > -1){
+    len += layer*indent;
+  }
   switch (json_node->type) {
     case JSON_TYPE_OBJECT:
       len += (json_node->ele_count);
     case JSON_TYPE_ARRAY:
       len += (json_node->ele_count - 1);
       len += 2;
+      if (indent > -1){
+        len++; // Add new line after starting bracket
+      }
       JsonNode *curr = json_node->child;
       while (curr != NULL) {
-        len += json_node_str_len(curr);
+        len += json_node_str_len(curr,indent,layer+1);
         curr = curr->next;
       }
       break;
@@ -532,9 +542,15 @@ int json_node_str_len(JsonNode *json_node) {
   if (json_node->key != NULL) {
     len += strlen(json_node->key) + 2;
   }
+  if (indent > -1 && layer > 0) len += 1; // Newline
   return len;
 }
 
-int json_node_pretty_str_len(JsonNode *json_node, int indent) {
-  if (json_node == NULL) return 0;
+
+int json_dump_str_len(JsonNode* root){
+  return json_node_str_len(root,INT32_MIN,0);
+}
+
+int json_pretty_dump_str_len(JsonNode* root, int indent){
+  return json_node_str_len(root,indent,0);
 }

@@ -53,6 +53,11 @@
 #define JSON_READ_WHITESPACE(str) \
   while (JSON_IS_WHITESPACE(*str) && *str != '\0') str++
 
+#define JSON_PAD_WHITESPACE(str, n) \
+  for (int _i = 0; _i < n; i++, str++) *str = ' '
+
+#define JSON_ADD_NEWLINE(str) *(str++) = '\n';
+
 typedef enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0
   JSON_TYPE_DOUBLE,     // 1
@@ -113,9 +118,9 @@ bool json_dump(JsonNode *root, char *buf, int buf_size);
 bool json_dump_pretty(JsonNode *root, int indent, char *buf, int buf_size);
 
 // Gets the length of the string from dumping a json node
-int json_node_str_len(JsonNode *json_node);
+int json_dump_str_len(JsonNode *json_node);
 
-// Gets the length of the string from dumping a json node with pretty printing
-int json_node_pretty_str_len(JsonNode *json_node, int indent);
+// Gets the length of the string from dumping a json node
+int json_pretty_dump_str_len(JsonNode *json_node, int indent);
 
 #endif

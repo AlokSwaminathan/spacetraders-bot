@@ -621,7 +621,7 @@ JsonNode *json_array_get(JsonNode *array, size_t index) {
   if (array == NULL || array->type != JSON_TYPE_ARRAY) return NULL;
   if (index >= array->ele_count) return NULL;
   JsonNode *curr = array->child;
-  for (int i = 0; i < index; i++, curr = curr->next);
+  for (size_t i = 0; i < index; i++, curr = curr->next);
   return curr;
 }
 
@@ -652,6 +652,7 @@ bool json_array_insert(JsonNode *array, size_t index, JsonNode *val) {
   val->prev = next->prev;
   next->prev = val;
   if (val->prev != NULL) val->prev->next = val;
+  return true;
 }
 
 void json_array_append(JsonNode *array, JsonNode *val) {

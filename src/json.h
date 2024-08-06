@@ -132,12 +132,12 @@ JsonNode *json_object_get(JsonNode *object, char *key);
 JsonNode *json_array_get(JsonNode *array, size_t index);
 
 // Sets node at index to value, doesn't shift other elements
-// Returns true if set was successful
-// Returns false if index out of bounds
+// Returns old JsonNode if successful
+// Returns NULL if index out of bounds (index >= array->ele_count)
 // Value should be on the heap
-bool json_array_set(JsonNode *array, size_t index, JsonNode *val);
+JsonNode* json_array_set(JsonNode *array, size_t index, JsonNode *val);
 
-// Sets node at index to value, shifts rest of array to the right
+// Sets node at index to value, shifts rest of array to the right including arr[index]
 // Returns true if set was successful
 // Returns false if index out of bounds (will work if index = len(arr))
 // Value should be on the heap
@@ -145,17 +145,18 @@ bool json_array_insert(JsonNode *array, size_t index, JsonNode *val);
 
 // Appends value to the end of a json array
 // Value should be on the heap
-void json_array_append(JsonNode *array, size_t index, JsonNode *val);
+void json_array_append(JsonNode *array, JsonNode *val);
 
 // Sets a key, val pair in an object
 // Key and value should be on the heap
-void json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val);
+// Returns pointer to previous node with that key, or NULL if the key is new
+JsonNode* json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val);
 
 // Changes k,v pair in object to have a new key
-// Returns changed node if original key existed
 // New key should be on the heap
-// Returns NULL if original key didn't exist
-JsonNode *json_object_change_key(JsonNode *object, char *original, char *new);
+// Returns true if change worked
+// Returns false if original key didn't exist or if the new key was already taken
+bool json_object_change_key(JsonNode *object, char *original, char *new);
 
 // Changes node to have new value and type
 // If value is double, long long, or bool, doesn't need to be on heap

@@ -483,7 +483,7 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
       break;
     case JSON_TYPE_LONG_LONG: {
       int len = json_long_long_len_as_str(json_node->value_ll);
-      snprintf(buf, len+1, "%lld", json_node->value_ll);
+      snprintf(buf, len + 1, "%lld", json_node->value_ll);
       return buf + len;
       break;
     }
@@ -544,9 +544,9 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
       len += json_double_len_as_str(json_node->value_double);
       break;
     case JSON_TYPE_BOOL:
-      if (json_node->value_bool){
+      if (json_node->value_bool) {
         len += sizeof(JSON_TRUE_STR);
-      } else{
+      } else {
         len += sizeof(JSON_FALSE_STR);
       }
       break;
@@ -555,8 +555,8 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
       break;
   }
   if (json_node->key != NULL) {
-    len += 2;  // Quotes
-    if (indent > -1) len++; // Space after colon
+    len += 2;                // Quotes
+    if (indent > -1) len++;  // Space after colon
     len += json_str_escaped_len(json_node->key);
   }
   return len;
@@ -566,7 +566,7 @@ int json_double_len_as_str(double d) {
   snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*f", JSON_DOUBLE_MAX_PRECISION, d);
   int len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
   for (char *end = JSON_DOUBLE_LENGTH_STORAGE + len - 1; *end == '0'; end--, len--);
-  if (*(JSON_DOUBLE_LENGTH_STORAGE+len-1) == JSON_DECIMAL) len++; // Make sure the last char isn't the decimal point
+  if (*(JSON_DOUBLE_LENGTH_STORAGE + len - 1) == JSON_DECIMAL) len++;  // Make sure the last char isn't the decimal point
   return len;
 }
 
@@ -601,4 +601,141 @@ int json_dump_str_len(JsonNode *root) {
 
 int json_pretty_dump_str_len(JsonNode *root, int indent) {
   return json_node_str_len(root, indent, 0);
+}
+
+// Helper functions
+
+JsonNode *json_object_get(JsonNode *object, char *key) {
+  if (object == NULL || object->type != JSON_TYPE_OBJECT) return NULL;
+  JsonNode *curr = object->child;
+  while (curr != NULL) {
+    if (strcmp(curr->key, key) == 0) {
+      return curr;
+    }
+    curr = curr->next;
+  }
+  return NULL;
+}
+
+JsonNode *json_array_get(JsonNode *array, size_t index) {
+  if (array == NULL || array->type != JSON_TYPE_ARRAY) return NULL;
+  if (index >= array->ele_count) return NULL;
+  JsonNode *curr = array->child;
+  for (int i = 0; i < index; i++, curr = curr->next);
+  return curr;
+}
+
+JsonNode *json_array_set(JsonNode *array, size_t index, JsonNode *val) {
+  if (index >= array->ele_count) return NULL;
+  JsonNode *curr = json_array_get(array, index);
+  val->prev = curr->prev;
+  val->parent = array;
+  val->next = curr->next;
+  val->is_array_ele = true;
+  if (val->prev != NULL) val->prev->next = val;
+  if (val->next != NULL) val->next->prev = val;
+  if (index == 0) array->child = val;
+  return curr;
+}
+
+bool json_array_insert(JsonNode *array, size_t index, JsonNode *val) {
+  if (index > array->ele_count) return false;
+  if (index == array->ele_count) {
+    json_array_append(array, val);
+    return true;
+  }
+  if (index == 0) array->child = val;
+  JsonNode *next = json_array_get(array, index);
+  val->parent = array;
+  val->is_array_ele = true;
+  val->next = next;
+  val->prev = next->prev;
+  next->prev = val;
+  if (val->prev != NULL) val->prev->next = val;
+}
+
+void json_array_append(JsonNode *array, JsonNode *val) {
+  JsonNode *last = json_array_get(array, array->ele_count - 1);
+  val->next = NULL;
+  val->parent = array;
+  val->prev = last;
+  val->is_array_ele = true;
+  if (last == NULL) {
+    array->child = val;
+    return;
+  }
+  last->next = val;
+}
+
+JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val) {
+  if (object->type != JSON_TYPE_OBJECT) return NULL;
+  JsonNode *old_val = json_object_get(object, key);
+  val->key = key;
+  val->parent = object;
+  if (old_val != NULL) {
+    val->prev = old_val->prev;
+    val->next = old_val->next;
+    if (val->prev != NULL) val->prev->next = val;
+    if (val->next != NULL) val->next->prev = val;
+    if (object->child == old_val) object->child = val;
+    return old_val;
+  } else {
+    JsonNode *old_child = object->child;
+    if (old_child != NULL) old_child->prev = val;
+    val->next = old_child;
+    val->prev = NULL;
+    object->child = val;
+    return NULL;
+  }
+}
+
+bool json_object_change_key(JsonNode *object, char *original, char *new) {
+  if (object->type != JSON_TYPE_OBJECT) return false;
+  JsonNode *old_val = json_object_get(object, original);
+  if (original == NULL || json_object_get(object, new)) return false;
+  free(old_val->key);
+  old_val->key = new;
+  return true;
+}
+
+void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value) {
+  json_node->type = type;
+  switch (type) {
+    case JSON_TYPE_ARRAY:
+    case JSON_TYPE_OBJECT: {
+      json_node->child = (JsonNode *)value;
+
+      // Calculate number of elements
+      JsonNode *curr = json_node->child;
+      json_node->ele_count = 0;
+      while (curr != NULL) {
+        json_node->ele_count++;
+        curr = curr->next;
+      }
+      break;
+    }
+    case JSON_TYPE_BOOL:
+      json_node->value_bool = *(bool *)value;
+      break;
+    case JSON_TYPE_DOUBLE:
+      json_node->value_double = *(double *)value;
+      break;
+    case JSON_TYPE_LONG_LONG:
+      json_node->value_ll = *(long long *)value;
+      break;
+    case JSON_TYPE_NULL:
+      json_node->value_void = NULL;
+      break;
+    case JSON_TYPE_STRING:
+      json_node->value_str = (char *)value;
+      json_node->ele_count = strlen(json_node->value_str);
+      break;
+  }
+}
+
+JsonNode *json_new_node(JsonDataType type, void *value) {
+  JsonNode* node = json_node_default();
+  if (node == NULL) return NULL;
+  json_node_set_value(node,type,value);
+  return node;
 }

@@ -16,6 +16,8 @@ char *json_parse_literal(char *json_string, JsonNode *json_node);
 char *json_parse_symbol(char *json_string, JsonNode *json_node);
 
 int json_str_escaped_len(char *str);
+int json_double_len_as_str(double d);
+int json_long_long_len_as_str(long long ll);
 
 JsonNode *json_node_default(void);
 
@@ -26,6 +28,7 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer);
 char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
 char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
 char JSON_FALSE_STR[] = {'f', 'a', 'l', 's', 'e'};
+char JSON_DOUBLE_LENGTH_STORAGE[JSON_DOUBLE_MAX_PRECISION * 2 + 5];
 
 void free_json(JsonNode *json_node) {
   if (json_node == NULL) return;
@@ -290,7 +293,7 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
     str[i] = c;
   }
   str[len] = '\0';
-  json_node->val_strlen = len;
+  json_node->ele_count = len;
   json_node->type = JSON_TYPE_STRING;
   json_node->value_str = str;
   return json_string + 1;
@@ -324,21 +327,13 @@ char *json_parse_num(char *json_string, JsonNode *json_node) {
   }
   if (digits == 0) return NULL;
 
-  if (!is_double) d = l;
-
-  if (d < 1)
-    json_node->val_strlen = 1;
-  else
-    json_node->val_strlen = log10(d) + 1;
-
   if (is_negative && d != 0.0) {
     l *= -1;
     d *= -1;
-    json_node->val_strlen++;
   }
 
+  json_node->ele_count = 1;
   if (is_double) {
-    json_node->val_strlen += digits;
     json_node->type = JSON_TYPE_DOUBLE;
     json_node->value_double = d;
   } else {
@@ -373,7 +368,7 @@ char *json_parse_literal(char *json_string, JsonNode *json_node) {
   for (int i = 0; i < sz; i++) {
     if (*(json_string + i) != literal_str[i]) return NULL;
   }
-  json_node->val_strlen = sz;
+  json_node->ele_count = 1;
   return json_string + sz;
 }
 
@@ -414,7 +409,7 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
     JsonNode key_node = *json_node;
     key_node.value_str = key_node.key;
     key_node.key = NULL;
-    key_node.val_strlen = strlen(key_node.value_str);
+    key_node.ele_count = strlen(key_node.value_str);
     key_node.type = JSON_TYPE_STRING;
     buf = json_dump_node(&key_node, buf, -1, 0);
     *buf = JSON_COLON;
@@ -455,7 +450,7 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
     case JSON_TYPE_STRING:
       buf[0] = JSON_D_QUOTE;
       buf++;
-      int len = json_node->val_strlen;
+      int len = json_node->ele_count;
       for (int i = 0; i < len; i++) {
         char c = json_node->value_str[i];
         if (JSON_IS_SPECIAL_CHAR(c)) {
@@ -486,28 +481,21 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
       buf[0] = JSON_D_QUOTE;
       return buf + 1;
       break;
-    case JSON_TYPE_LONG_LONG:
-      snprintf(buf, json_node->val_strlen + 1, "%lld", json_node->value_ll);
-      return buf + json_node->val_strlen;
+    case JSON_TYPE_LONG_LONG: {
+      int len = json_long_long_len_as_str(json_node->value_ll);
+      snprintf(buf, len+1, "%lld", json_node->value_ll);
+      return buf + len;
       break;
+    }
     case JSON_TYPE_DOUBLE: {
-      int after_dec = json_node->val_strlen - 1;
-      double d = json_node->value_double;
-      if (d < 0) {
-        d *= -1;
-        after_dec--;
-      }
-      if (d >= 1)
-        after_dec -= (int)log10(d) + 1;
-      else
-        after_dec--;
-      snprintf(buf, json_node->val_strlen + 1, "%.*f", after_dec, json_node->value_double);
-      return buf + json_node->val_strlen;
+      int len = json_double_len_as_str(json_node->value_double);
+      snprintf(buf, len + 1, "%.*f", JSON_DOUBLE_MAX_PRECISION, json_node->value_double);
+      return buf + len;
       break;
     }
     case JSON_TYPE_NULL:
       memcpy(buf, JSON_NULL_STR, sizeof(JSON_NULL_STR));
-      return buf + sizeof(JSON_TRUE_STR);
+      return buf + sizeof(JSON_NULL_STR);
       break;
     case JSON_TYPE_BOOL:
       if (json_node->value_bool) {
@@ -535,8 +523,8 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
       len += (json_node->ele_count - 1);
       len += 2;
       if (indent > -1) {
-        len++;  // Add new line after starting bracket
-        len += layer * indent; // Add indent before ending bracket
+        len++;                  // Add new line after starting bracket
+        len += layer * indent;  // Add indent before ending bracket
       }
       JsonNode *curr = json_node->child;
       while (curr != NULL) {
@@ -550,15 +538,50 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
       len += json_str_escaped_len(json_node->value_str);
       break;
     case JSON_TYPE_LONG_LONG:
+      len += json_long_long_len_as_str(json_node->value_ll);
+      break;
     case JSON_TYPE_DOUBLE:
+      len += json_double_len_as_str(json_node->value_double);
+      break;
     case JSON_TYPE_BOOL:
+      if (json_node->value_bool){
+        len += sizeof(JSON_TRUE_STR);
+      } else{
+        len += sizeof(JSON_FALSE_STR);
+      }
+      break;
     case JSON_TYPE_NULL:
-      len += json_node->val_strlen;
+      len += sizeof(JSON_NULL_STR);
       break;
   }
   if (json_node->key != NULL) {
-    len += 3; // Quotes and space after colon
+    len += 2;  // Quotes
+    if (indent > -1) len++; // Space after colon
     len += json_str_escaped_len(json_node->key);
+  }
+  return len;
+}
+
+int json_double_len_as_str(double d) {
+  snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*f", JSON_DOUBLE_MAX_PRECISION, d);
+  int len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
+  for (char *end = JSON_DOUBLE_LENGTH_STORAGE + len - 1; *end == '0'; end--, len--);
+  if (*(JSON_DOUBLE_LENGTH_STORAGE+len-1) == JSON_DECIMAL) len++; // Make sure the last char isn't the decimal point
+  return len;
+}
+
+int json_long_long_len_as_str(long long ll) {
+  if (ll == 0) return 1;
+
+  int len = 0;
+
+  if (ll < 0) {
+    len++;
+    ll *= -1;
+  }
+  while (ll > 0) {
+    ll /= 10;
+    len++;
   }
   return len;
 }

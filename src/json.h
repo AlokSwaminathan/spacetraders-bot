@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define JSON_RC_BRACKET '}'
 #define JSON_LC_BRACKET '{'
@@ -58,6 +59,8 @@
 
 #define JSON_STRING_ADD_NEWLINE(str) *(str++) = '\n';
 
+#define JSON_DOUBLE_MAX_PRECISION 308
+
 typedef enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0
   JSON_TYPE_DOUBLE,     // 1
@@ -74,12 +77,10 @@ typedef struct JsonNode {
   JsonNode *prev;
   JsonNode *next;
   JsonDataType type;
-  // If array or object then their respective number of children, otherwise, the length of the values string representation
-  // For strings this is the same as strlen
-  union {
-    uint32_t ele_count;
-    uint32_t val_strlen;
-  };
+  // If array or object then their respective number of children
+  // If its a string then it is the length of the string
+  // Otherwise it is just 1
+  uint32_t ele_count;
   bool is_array_ele;
   char *key;
   union {
@@ -133,31 +134,38 @@ JsonNode *json_array_get(JsonNode *array, size_t index);
 // Sets node at index to value, doesn't shift other elements
 // Returns true if set was successful
 // Returns false if index out of bounds
+// Value should be on the heap
 bool json_array_set(JsonNode *array, size_t index, JsonNode *val);
 
 // Sets node at index to value, shifts rest of array to the right
 // Returns true if set was successful
 // Returns false if index out of bounds (will work if index = len(arr))
+// Value should be on the heap
 bool json_array_insert(JsonNode *array, size_t index, JsonNode *val);
 
 // Appends value to the end of a json array
+// Value should be on the heap
 void json_array_append(JsonNode *array, size_t index, JsonNode *val);
 
 // Sets a key, val pair in an object
-JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode val);
+// Key and value should be on the heap
+void json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val);
 
 // Changes k,v pair in object to have a new key
 // Returns changed node if original key existed
+// New key should be on the heap
 // Returns NULL if original key didn't exist
 JsonNode *json_object_change_key(JsonNode *object, char *original, char *new);
 
 // Changes node to have new value and type
+// If value is double, long long, or bool, doesn't need to be on heap
+// Otherwise value should be on the heap
 void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value);
 
 // Returns new json node with provided type and value
+// If value is double, long long, or bool, doesn't need to be on heap
+// Otherwise value should be on the heap
 // Returns null if malloc fails
-JsonNode* json_new_node(JsonDataType type, void *value);
-
-
+JsonNode *json_new_node(JsonDataType type, void *value);
 
 #endif

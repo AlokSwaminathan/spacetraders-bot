@@ -119,7 +119,45 @@ bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size);
 // Gets the length of the string from dumping a json node
 int json_dump_str_len(JsonNode *json_node);
 
-// Gets the length of the string from dumping a json node
+// Gets the length of the string from dumping a json node with indentation and pretty printing
+// Newline between all elements in objects and arrays, along with spaces after colons in k,v pairs
+// No trailing new line
 int json_pretty_dump_str_len(JsonNode *json_node, int indent);
+
+// Returns node or NULL if key not found
+JsonNode *json_object_get(JsonNode *object, char *key);
+
+// Returns node or NULL if node out of bound
+JsonNode *json_array_get(JsonNode *array, size_t index);
+
+// Sets node at index to value, doesn't shift other elements
+// Returns true if set was successful
+// Returns false if index out of bounds
+bool json_array_set(JsonNode *array, size_t index, JsonNode *val);
+
+// Sets node at index to value, shifts rest of array to the right
+// Returns true if set was successful
+// Returns false if index out of bounds (will work if index = len(arr))
+bool json_array_insert(JsonNode *array, size_t index, JsonNode *val);
+
+// Appends value to the end of a json array
+void json_array_append(JsonNode *array, size_t index, JsonNode *val);
+
+// Sets a key, val pair in an object
+JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode val);
+
+// Changes k,v pair in object to have a new key
+// Returns changed node if original key existed
+// Returns NULL if original key didn't exist
+JsonNode *json_object_change_key(JsonNode *object, char *original, char *new);
+
+// Changes node to have new value and type
+void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value);
+
+// Returns new json node with provided type and value
+// Returns null if malloc fails
+JsonNode* json_new_node(JsonDataType type, void *value);
+
+
 
 #endif

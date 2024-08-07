@@ -307,30 +307,89 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
 char *json_parse_num(char *json_string, JsonNode *json_node) {
   long long l = 0;
   double d = 0.0;
-  int digits = 0;
+
+  bool hit_decimal = false;
   bool is_double = false;
   bool is_negative = false;
+
   if (*json_string == '-') {
     is_negative = true;
     json_string++;
   }
-  for (; JSON_IS_NUM(*json_string); json_string++, digits++) {
-    if (*json_string == JSON_DECIMAL) {
-      if (is_double) return NULL;
-      is_double = true;
-      d = l;
-      digits = 0;
-      continue;
-    }
-    uint8_t digit = *json_string - '0';
-    if (is_double) {
-      d += digit * pow(10, -digits);
+  if (*json_string == JSON_DECIMAL) {
+    return NULL;
+  }
+
+  size_t digits_whole = 0;
+  size_t digits_decimal = 0;
+
+  json_string--;
+  while (json_string++) {
+    char c = *json_string;
+    if (JSON_IS_NUM(c)) {
+      if (hit_decimal) {
+        d += (c - '0') * pow(10, -(int)(digits_decimal + 1));
+        digits_decimal++;
+        continue;
+      }
+      digits_whole++;
+      if (is_double) {
+        d = (d * 10) + (c - '0');
+      } else {
+        if ((double)l * 10 + (c - '0') > (double)__LONG_LONG_MAX__/JSON_DOUBLE_COMPARISON_TOLERANCE) {
+          is_double = true;
+          d = ((double)l * 10) + (c - '0');
+        } else {
+          l = (l * 10) + (c - '0');
+        }
+      }
+    } else if (c == JSON_DECIMAL) {
+      hit_decimal = true;
+      if (!is_double) {
+        is_double = true;
+        d = l;
+      }
+    } else if (JSON_IS_EXPONENT_START(c)) {
+      if (digits_decimal == 0) return NULL;
+      if (l == 0 && d == 0.0) {
+      } else if (is_double) {
+        if (d < 1.0 || d >= 10.0) return NULL;
+      } else {
+        if (l < 1 || l >= 10) return NULL;
+      }
+      int sign;
+      if (*(json_string + 1) == '+') {
+        sign = 1;
+        json_string++;
+      } else if (*(json_string + 1) == '-') {
+        sign = -1;
+        json_string++;
+      } else if (isdigit(*(json_string + 1))) {
+        sign = 1;
+      } else {
+        return NULL;
+      }
+      int exponent = 0;
+      for (json_string++; isdigit(*json_string); json_string++) {
+        exponent = (exponent * 10) + (*json_string - '0');
+      }
+      if (is_double) {
+        d = d * pow(10, sign * exponent);
+      } else {
+        d = l * pow(10, sign * exponent);
+        if (d > __LONG_LONG_MAX__/JSON_DOUBLE_COMPARISON_TOLERANCE) {
+          is_double = true;
+        } else {
+          l = d;
+        }
+      }
+      break;
     } else {
-      l *= 10;
-      l += digit;
+      break;
     }
   }
-  if (digits == 0) return NULL;
+  if (hit_decimal && digits_decimal == 0) return NULL;
+  if (digits_whole == 0) return NULL;
 
   if (is_negative) {
     l *= -1;
@@ -338,6 +397,7 @@ char *json_parse_num(char *json_string, JsonNode *json_node) {
   }
 
   json_node->ele_count = 1;
+
   if (is_double) {
     json_node->type = JSON_TYPE_DOUBLE;
     json_node->value_double = d;
@@ -507,17 +567,17 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
         int exp_zeros = 0;
         int significand_zeros = 0;
         for (curr++; *curr == '0'; curr++, exp_zeros++);
-        char* power = curr;
-        for (curr = exp-1; *curr == '0' || *curr == JSON_DECIMAL; curr--, significand_zeros++);
-        int starting_amt = 1+(curr-JSON_DOUBLE_LENGTH_STORAGE);
-        memcpy(buf,JSON_DOUBLE_LENGTH_STORAGE,starting_amt);
+        char *power = curr;
+        for (curr = exp - 1; *curr == '0' || *curr == JSON_DECIMAL; curr--, significand_zeros++);
+        int starting_amt = 1 + (curr - JSON_DOUBLE_LENGTH_STORAGE);
+        memcpy(buf, JSON_DOUBLE_LENGTH_STORAGE, starting_amt);
         buf[starting_amt] = 'e';
-        if (d_abs < 1){
-          buf[starting_amt+1] = '-'; 
-        } else{
-          buf[starting_amt+1] = '+'; 
+        if (d_abs < 1) {
+          buf[starting_amt + 1] = '-';
+        } else {
+          buf[starting_amt + 1] = '+';
         }
-        memcpy(buf+starting_amt+2,power,(end+1)-power);
+        memcpy(buf + starting_amt + 2, power, (end + 1) - power);
       }
       return buf + len;
       break;
@@ -588,14 +648,6 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
     if (indent > -1) len++;  // Space after colon
     len += json_str_escaped_len(json_node->key);
   }
-  return len;
-}
-
-int old_json_double_len_as_str(double d) {
-  snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*f", JSON_DOUBLE_MAX_PRECISION, d);
-  int len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
-  for (char *end = JSON_DOUBLE_LENGTH_STORAGE + len - 1; *end == '0'; end--, len--);
-  if (*(JSON_DOUBLE_LENGTH_STORAGE + len - 1) == JSON_DECIMAL) len++;  // Make sure the last char isn't the decimal point
   return len;
 }
 

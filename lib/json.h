@@ -42,8 +42,8 @@
 #define JSON_IS_SPECIAL_CHAR(c) (c == JSON_BACKSLASH || c == JSON_NEWLINE || c == JSON_D_QUOTE || c == JSON_FSLASH || c == JSON_FORMFEED || c == JSON_CARRIAGE_RET || c == JSON_TAB || c == JSON_BACKSPACE)
 
 #define JSON_IS_WHITESPACE(c) (c == ' ' || c == '\n' || c == '\t' || c == '\r')
-#define JSON_IS_NUM_START(c) ((c >= '0' && c <= '9') || c == '.' || c == '-')
-#define JSON_IS_NUM(c) (JSON_IS_NUM_START(c) && c != '-')
+#define JSON_IS_NUM(c) (c >= '0' && c <= '9')
+#define JSON_IS_NUM_START(c) (JSON_IS_NUM(c) || c == '-')
 #define JSON_IS_STRING_START(c) (c == '\"')
 #define JSON_IS_OBJECT_START(c) (c == JSON_LC_BRACKET)
 #define JSON_IS_ARR_START(c) (c == JSON_L_BRACKET)
@@ -62,6 +62,8 @@
 #define JSON_DOUBLE_MAX_PRECISION 308
 #define JSON_DOUBLE_MIN_NORMAL 1e-5
 #define JSON_DOUBLE_MAX_NORMAL 1e5
+#define JSON_DOUBLE_COMPARISON_TOLERANCE 1.1
+#define JSON_IS_EXPONENT_START(c) (c == 'e' || c == 'E')
 
 typedef enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0

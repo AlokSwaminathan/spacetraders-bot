@@ -161,12 +161,14 @@ bool json_object_change_key(JsonNode *object, char *original, char *new);
 // Changes node to have new value and type
 // If value is double, long long, or bool, doesn't need to be on heap
 // Otherwise value should be on the heap
+// Double values should not be inf or nan
 void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value);
 
 // Returns new json node with provided type and value
 // If value is double, long long, or bool, doesn't need to be on heap
 // Otherwise value should be on the heap
 // Returns null if malloc fails
+// Double values should not be inf or nan
 JsonNode *json_new_node(JsonDataType type, void *value);
 
 #endif

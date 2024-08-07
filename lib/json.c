@@ -1,5 +1,6 @@
 #include "json.h"
 
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -182,6 +183,10 @@ char *json_parse_array(char *json_string, JsonNode *json_node) {
   json_node->child = NULL;
 
   json_string++;
+
+  JSON_STRING_READ_WHITESPACE(json_string);
+  if (*json_string == JSON_R_BRACKET) return json_string + 1;
+
   JsonNode *prev = NULL;
   JsonNode *curr = NULL;
   while (true) {
@@ -327,7 +332,7 @@ char *json_parse_num(char *json_string, JsonNode *json_node) {
   }
   if (digits == 0) return NULL;
 
-  if (is_negative && d != 0.0) {
+  if (is_negative) {
     l *= -1;
     d *= -1;
   }
@@ -489,7 +494,31 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
     }
     case JSON_TYPE_DOUBLE: {
       int len = json_double_len_as_str(json_node->value_double);
-      snprintf(buf, len + 1, "%.*f", JSON_DOUBLE_MAX_PRECISION, json_node->value_double);
+      double d_abs = fabs(json_node->value_double);
+      if (d_abs > JSON_DOUBLE_MIN_NORMAL && d_abs < JSON_DOUBLE_MAX_NORMAL) {
+        snprintf(buf, len + 1, "%.*f", JSON_DOUBLE_MAX_PRECISION, json_node->value_double);
+      } else {
+        snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*e", __DECIMAL_DIG__, json_node->value_double);
+        int full_len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
+        char *end = JSON_DOUBLE_LENGTH_STORAGE + full_len - 1;
+        char *curr = end;
+        for (; isdigit(*curr); curr--);
+        char *exp = curr - 1;
+        int exp_zeros = 0;
+        int significand_zeros = 0;
+        for (curr++; *curr == '0'; curr++, exp_zeros++);
+        char* power = curr;
+        for (curr = exp-1; *curr == '0' || *curr == JSON_DECIMAL; curr--, significand_zeros++);
+        int starting_amt = 1+(curr-JSON_DOUBLE_LENGTH_STORAGE);
+        memcpy(buf,JSON_DOUBLE_LENGTH_STORAGE,starting_amt);
+        buf[starting_amt] = 'e';
+        if (d_abs < 1){
+          buf[starting_amt+1] = '-'; 
+        } else{
+          buf[starting_amt+1] = '+'; 
+        }
+        memcpy(buf+starting_amt+2,power,(end+1)-power);
+      }
       return buf + len;
       break;
     }
@@ -562,12 +591,37 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
   return len;
 }
 
-int json_double_len_as_str(double d) {
+int old_json_double_len_as_str(double d) {
   snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*f", JSON_DOUBLE_MAX_PRECISION, d);
   int len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
   for (char *end = JSON_DOUBLE_LENGTH_STORAGE + len - 1; *end == '0'; end--, len--);
   if (*(JSON_DOUBLE_LENGTH_STORAGE + len - 1) == JSON_DECIMAL) len++;  // Make sure the last char isn't the decimal point
   return len;
+}
+
+int json_double_len_as_str(double d) {
+  if (d == 0.0) return 0;
+  double d_abs = fabs(d);
+  if (d_abs > JSON_DOUBLE_MIN_NORMAL && d_abs < JSON_DOUBLE_MAX_NORMAL) {
+    snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*f", JSON_DOUBLE_MAX_PRECISION, d);
+    int len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
+    for (char *end = JSON_DOUBLE_LENGTH_STORAGE + len - 1; *end == '0'; end--, len--);
+    if (*(JSON_DOUBLE_LENGTH_STORAGE + len - 1) == JSON_DECIMAL) len++;  // Make sure the last char isn't the decimal point
+    return len;
+  } else {
+    snprintf(JSON_DOUBLE_LENGTH_STORAGE, sizeof(JSON_DOUBLE_LENGTH_STORAGE), "%.*e", __DECIMAL_DIG__, d);
+    int len = strlen(JSON_DOUBLE_LENGTH_STORAGE);
+    char *end = JSON_DOUBLE_LENGTH_STORAGE + len - 1;
+    char *curr = end;
+    for (; isdigit(*curr); curr--);
+    char *exp = curr - 1;
+    int exp_zeros = 0;
+    int significand_zeros = 0;
+    for (curr++; *curr == '0'; curr++, exp_zeros++);
+    for (exp--; *exp == '0' || *exp == JSON_DECIMAL; exp--, significand_zeros++);
+    len -= significand_zeros + exp_zeros;
+    return len;
+  }
 }
 
 int json_long_long_len_as_str(long long ll) {
@@ -735,8 +789,8 @@ void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value) {
 }
 
 JsonNode *json_new_node(JsonDataType type, void *value) {
-  JsonNode* node = json_node_default();
+  JsonNode *node = json_node_default();
   if (node == NULL) return NULL;
-  json_node_set_value(node,type,value);
+  json_node_set_value(node, type, value);
   return node;
 }

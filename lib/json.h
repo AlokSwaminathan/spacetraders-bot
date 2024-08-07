@@ -60,6 +60,8 @@
 #define JSON_STRING_ADD_NEWLINE(str) *(str++) = '\n';
 
 #define JSON_DOUBLE_MAX_PRECISION 308
+#define JSON_DOUBLE_MIN_NORMAL 1e-5
+#define JSON_DOUBLE_MAX_NORMAL 1e5
 
 typedef enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0
@@ -135,7 +137,7 @@ JsonNode *json_array_get(JsonNode *array, size_t index);
 // Returns old JsonNode if successful
 // Returns NULL if index out of bounds (index >= array->ele_count)
 // Value should be on the heap
-JsonNode* json_array_set(JsonNode *array, size_t index, JsonNode *val);
+JsonNode *json_array_set(JsonNode *array, size_t index, JsonNode *val);
 
 // Sets node at index to value, shifts rest of array to the right including arr[index]
 // Returns true if set was successful
@@ -150,7 +152,7 @@ void json_array_append(JsonNode *array, JsonNode *val);
 // Sets a key, val pair in an object
 // Key and value should be on the heap
 // Returns pointer to previous node with that key, or NULL if the key is new
-JsonNode* json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val);
+JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val);
 
 // Changes k,v pair in object to have a new key
 // New key should be on the heap

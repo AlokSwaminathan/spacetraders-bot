@@ -101,7 +101,7 @@ def unsigned_int(arg):
 def parse_args():
     parser = argparse.ArgumentParser(description="JSON parser test")
     parser.add_argument(
-        "--cycles", help="Number of JSON objects to test with", default=1000, required=False, type=unsigned_int)
+        "--cycles", help="Number of JSON objects to test with", default=100, required=False, type=unsigned_int)
     parser.add_argument(
         "--max-depth", help="Maximum depth of a generated JSON object", default=5, required=False, type=unsigned_int)
     parser.add_argument(

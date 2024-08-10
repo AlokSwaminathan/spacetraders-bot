@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -g
+CFLAGS := -Wall -Wextra -g -lcurl
 
 SRCDIR := src
 BUILDDIR := build
@@ -21,7 +21,7 @@ TARGET := $(BUILDDIR)/spacetrader_bot
 
 $(TARGET) : $(SRCOBJS) $(LIBOBJS)
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(SRCOBJS) $(LIBOBJS) -o $@
+	$(CC) $(CFLAGS) $(SRCOBJS) $(LIBOBJS) -o $@
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(BUILDDIR)

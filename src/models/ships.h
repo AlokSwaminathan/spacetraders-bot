@@ -1,15 +1,15 @@
-#ifndef SPACETRADERS_RESPONSES_FLEETS
-#define SPACETRADERS_RESPONSES_FLEETS
+#ifndef SPACETRADERS_MODELS_FLEETS
+#define SPACETRADERS_MODELS_FLEETS
 
 #include "models.h"
 
-typedef enum ShipStatus{
+typedef enum ShipStatus {
   IN_TRANSIT,
   IN_ORBIT,
   DOCKED,
 } ShipStatus;
 
-typedef enum ShipFlightMode{
+typedef enum ShipFlightMode {
   CRUISE,
   DRIFT,
   STEALTH,
@@ -17,12 +17,12 @@ typedef enum ShipFlightMode{
   BURN,
 } ShipFlightMode;
 
-typedef enum ShipCrewRotation{
+typedef enum ShipCrewRotation {
   STRICT,
   RELAXED
 } ShipCrewRotation;
 
-typedef struct ShipCrew{
+typedef struct ShipCrew {
   int current;
   int required;
   int capacity;
@@ -31,13 +31,13 @@ typedef struct ShipCrew{
   int wages;
 } ShipCrew;
 
-typedef struct ShipInstallReqs{
+typedef struct ShipInstallReqs {
   int power;
   int crew;
   int slots;
 } ShipInstallReqs;
 
-typedef struct ShipFrame{
+typedef struct ShipFrame {
   char* frame_symbol;
   char* name;
   char* desc;
@@ -48,7 +48,7 @@ typedef struct ShipFrame{
   ShipInstallReqs reqs;
 } ShipFrame;
 
-typedef struct ShipReactor{
+typedef struct ShipReactor {
   char* symbol;
   char* name;
   char* desc;
@@ -58,7 +58,7 @@ typedef struct ShipReactor{
   ShipInstallReqs reqs;
 } ShipReactor;
 
-typedef struct ShipEngine{
+typedef struct ShipEngine {
   char* symbol;
   char* name;
   char* desc;
@@ -68,14 +68,14 @@ typedef struct ShipEngine{
   ShipInstallReqs reqs;
 } ShipEngine;
 
-typedef struct ShipCoolDown{
+typedef struct ShipCoolDown {
   char* ship_symbol;
   int total_sec;
   int remaining_sec;
   time_t expiration;
 } ShipCoolDown;
 
-typedef struct ShipModule{
+typedef struct ShipModule {
   char* symbol;
   int capacity;
   int range;
@@ -84,7 +84,7 @@ typedef struct ShipModule{
   ShipInstallReqs reqs;
 } ShipModule;
 
-typedef struct ShipMount{
+typedef struct ShipMount {
   char* symbol;
   char* name;
   char* desc;
@@ -94,20 +94,20 @@ typedef struct ShipMount{
   ShipInstallReqs reqs;
 } ShipMount;
 
-typedef struct ShipCargoItem{
+typedef struct ShipCargoItem {
   char* symbol;
   char* name;
   char* desc;
   int units;
 } ShipCargoItem;
 
-typedef struct ShipCargo{
+typedef struct ShipCargo {
   int capacity;
   int units;
-  ARRAY_STRUCT(ShipCargoItem,inventory);
+  ARRAY_STRUCT(ShipCargoItem, inventory);
 } ShipCargo;
 
-typedef struct ShipFuel{
+typedef struct ShipFuel {
   int curr;
   int capacity;
   bool consumed;
@@ -115,34 +115,34 @@ typedef struct ShipFuel{
   time_t consumption_time;
 } ShipFuel;
 
-typedef struct Ship{
+typedef struct Ship {
   char* symbol;
   ShipRegistration registration;
-  ShipNavigation nav; 
+  ShipNavigation nav;
   ShipCoolDown cooldown;
-  ARRAY_STRUCT(ShipModule,modules);
-  ARRAY_STRUCT(ShipMount,mounts);
+  ARRAY_STRUCT(ShipModule, modules);
+  ARRAY_STRUCT(ShipMount, mounts);
   ShipCargo cargo;
   ShipFuel fuel;
 } Ship;
 
-typedef struct ShipExtractionYield{
+typedef struct ShipExtractionYield {
   char* symbol;
   int units;
 } ShipExtractionYield;
 
-typedef struct ShipExtraction{
+typedef struct ShipExtraction {
   char* ship_symbol;
   ShipExtractionYield yield;
 } ShipExtraction;
 
-typedef struct ShipRegistration{
+typedef struct ShipRegistration {
   char* name;
   char* faction_symbol;
   char* role;
 } ShipRegistration;
 
-typedef struct ShipNavRouteWaypoint{
+typedef struct ShipNavRouteWaypoint {
   char* symbol;
   char* type;
   char* system_symbol;
@@ -150,14 +150,14 @@ typedef struct ShipNavRouteWaypoint{
   int y;
 } ShipNavRouteWaypoint;
 
-typedef struct ShipNavRoute{
+typedef struct ShipNavRoute {
   ShipNavRouteWaypoint origin;
   ShipNavRouteWaypoint destination;
   time_t departure;
   time_t arrival;
 } ShipNavRoute;
 
-typedef struct ShipNavigation{
+typedef struct ShipNavigation {
   char* system_symbol;
   char* waypoint_symbol;
 
@@ -165,7 +165,7 @@ typedef struct ShipNavigation{
   ShipFlightMode flight_mode;
 } ShipNavigation;
 
-typedef struct ScannerShip{
+typedef struct ScannerShip {
   char* symbol;
   ShipRegistration registration;
   ShipNavigation nav;
@@ -176,20 +176,20 @@ typedef struct ScannerShip{
   size_t mounts_len;
 } ScannerShip;
 
-typedef enum ShipComponent{
+typedef enum ShipComponent {
   FRAME,
   REACTOR,
   ENGINE
 } ShipComponent;
 
-typedef struct ShipConditionEvent{
+typedef struct ShipConditionEvent {
   char* symbol;
   ShipComponent component;
   char* name;
   char* desc;
 } ShipConditionEvent;
 
-typedef struct ShipModificationTransaction{
+typedef struct ShipModificationTransaction {
   char* waypoint_symbol;
   char* ship_symbol;
   char* trade_symbol;
@@ -197,7 +197,7 @@ typedef struct ShipModificationTransaction{
   time_t timestamp;
 } ShipModificationTransaction;
 
-typedef struct ShipyardTransacation{
+typedef struct ShipyardTransacation {
   char* waypoint_symbol;
   char* ship_symbol;
   char* ship_type;
@@ -206,7 +206,7 @@ typedef struct ShipyardTransacation{
   time_t timestamp;
 } ShipyardTransacation;
 
-typedef struct ShipyardShip{
+typedef struct ShipyardShip {
   char* type;
   char* name;
   char* desc;
@@ -216,21 +216,21 @@ typedef struct ShipyardShip{
   ShipFrame frame;
   ShipReactor reactor;
   ShipEngine engine;
-  ARRAY_STRUCT(ShipModule,modules);
-  ARRAY_STRUCT(ShipMount,mounts);
+  ARRAY_STRUCT(ShipModule, modules);
+  ARRAY_STRUCT(ShipMount, mounts);
   ShipCrew crew;
 } ShipyardShip;
 
-typedef struct Shipyard{
+typedef struct Shipyard {
   char* symbol;
   char** ship_types;
   size_t ship_types_len;
-  ARRAY_STRUCT(ShipyardTransacation,transactions);
-  ARRAY_STRUCT(ShipyardShip,ships);
+  ARRAY_STRUCT(ShipyardTransacation, transactions);
+  ARRAY_STRUCT(ShipyardShip, ships);
   int modifications_fee;
 } Shipyard;
 
-typedef struct Siphon{
+typedef struct Siphon {
   char* ship_symbol;
   char* yield;
   int units;

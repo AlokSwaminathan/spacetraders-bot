@@ -1,0 +1,6 @@
+#ifndef SPACETRADER_REQUEST_CONTRACTS
+#define SPACETRADER_REQUEST_CONTRACTS
+
+#include "requests.h"
+
+#endif

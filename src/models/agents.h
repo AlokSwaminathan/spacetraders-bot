@@ -1,9 +1,9 @@
-#ifndef SPACETRADERS_RESPONSES_AGENTS
-#define SPACETRADERS_RESPONSES_AGENTS
+#ifndef SPACETRADERS_MODELS_AGENTS
+#define SPACETRADERS_MODELS_AGENTS
 
 #include "models.h"
 
-typedef struct Agent{
+typedef struct Agent {
   char* account_id;
   char* symbol;
   char* headquarters;
@@ -11,5 +11,13 @@ typedef struct Agent{
   char* starting_faction;
   int ship_count;
 } Agent;
+
+typedef struct NewAgentData{
+  Agent agent;
+  Contract starting_contract;
+  Faction faction;
+  Ship ship;
+  char* token;
+} NewAgentData;
 
 #endif

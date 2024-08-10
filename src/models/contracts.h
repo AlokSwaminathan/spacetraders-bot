@@ -1,5 +1,5 @@
-#ifndef SPACETRADERS_RESPONSES_CONTRACTS
-#define SPACETRADERS_RESPONSES_CONTRACTS
+#ifndef SPACETRADERS_MODELS_CONTRACTS
+#define SPACETRADERS_MODELS_CONTRACTS
 
 #include "../util.h"
 
@@ -9,14 +9,14 @@ typedef enum ContractType {
   CONTRACT_SHUTTLE,
 } ContractType;
 
-typedef struct ContractDeliverGood{
+typedef struct ContractDeliverGood {
   char* trade_symbol;
   char* dest_symbol;
   int units_required;
   int units_fulfilled;
 } ContractDeliverGood;
 
-typedef struct ContractPayment{
+typedef struct ContractPayment {
   int on_accepted;
   int on_fulfilled;
 } ContractPayment;

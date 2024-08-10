@@ -13,12 +13,4 @@
 
 #include "util.h"
 
-typedef struct NewAgentData{
-  Agent agent;
-  Contract starting_contract;
-  Faction faction;
-  Ship ship;
-  char* token;
-} NewAgentData;
-
 #endif

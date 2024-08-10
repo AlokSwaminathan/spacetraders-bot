@@ -1,6 +1,8 @@
 #ifndef SPACETRADERS_RESPONSES_AGENTS
 #define SPACETRADERS_RESPONSES_AGENTS
 
+#include "models.h"
+
 typedef struct Agent{
   char* account_id;
   char* symbol;

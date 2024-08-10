@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_RESPONSES_LOCATIONS
 #define SPACETRADERS_RESPONSES_LOCATIONS
 
-#include "responses.h"
+#include "models.h"
 
 typedef struct Chart {
   char* waypoint_symbol;
@@ -19,20 +19,19 @@ typedef struct ConnectedSystem {
   int dist;
 } ConnectedSystem;
 
-
-typedef struct WaypointConstruction{
+typedef struct WaypointConstruction {
   char* symbol;
   ARRAY_STRUCT(ConstructionMaterials, materials);
   bool is_complete;
 } WaypointConstruction;
 
-typedef struct JumpGate{
+typedef struct JumpGate {
   char* waypoint_symbol;
   char** connections;
   size_t connections_len;
 } JumpGate;
 
-typedef struct ScannedSystem{
+typedef struct ScannedSystem {
   char* symbol;
   char* sector_symbol;
   char* type;
@@ -41,7 +40,7 @@ typedef struct ScannedSystem{
   int dist;
 } ScannedSystem;
 
-typedef struct ScannedWaypoint{
+typedef struct ScannedWaypoint {
   char* symbol;
   char* type;
   char* system_symbol;
@@ -50,17 +49,17 @@ typedef struct ScannedWaypoint{
   char** orbitals;
   size_t orbital_len;
   char* faction_symbol;
-  ARRAY_STRUCT(Trait,traits);
+  ARRAY_STRUCT(Trait, traits);
   Chart chart;
 } ScannedWaypoint;
 
-typedef enum DepositSize{
+typedef enum DepositSize {
   SMALL,
   MODERATE,
   LARGE,
 } DepositSize;
 
-typedef struct Survey{
+typedef struct Survey {
   char* signature;
   char* symbol;
   char** deposits;
@@ -69,7 +68,7 @@ typedef struct Survey{
   DepositSize size;
 } Survey;
 
-typedef struct SystemWaypoint{
+typedef struct SystemWaypoint {
   char* symbol;
   char* type;
   int x;
@@ -79,16 +78,15 @@ typedef struct SystemWaypoint{
   char* orbits;
 } SystemWaypoint;
 
-typedef struct System{
+typedef struct System {
   char* symbol;
   char* sector_symbol;
   char* type;
   int x;
   int y;
-  ARRAY_STRUCT(SystemWaypoint,waypoints);
+  ARRAY_STRUCT(SystemWaypoint, waypoints);
   char** factions;
   size_t factions_len;
 } System;
-
 
 #endif

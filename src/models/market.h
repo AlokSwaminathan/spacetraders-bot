@@ -1,20 +1,20 @@
 #ifndef SPACETRADERS_RESPONSES_MARKET
 #define SPACETRADERS_RESPONSES_MARKET
 
-#include "responses.h"
+#include "models.h"
 
-typedef struct TradeGood{
+typedef struct TradeGood {
   char* symbol;
   char* name;
   char* desc;
 } TradeGood;
 
-typedef enum TransactionType{
+typedef enum TransactionType {
   PURCHASE,
   SELL,
 } TransactionType;
 
-typedef struct MarketTransactions{
+typedef struct MarketTransactions {
   char* waypoint_symbol;
   char* ship_symbol;
   char* trade_symbol;
@@ -25,7 +25,7 @@ typedef struct MarketTransactions{
   time_t timestamp;
 } MarketTransactions;
 
-typedef struct MarketTradeGood{
+typedef struct MarketTradeGood {
   char* symbol;
   char* type;
   int trade_volume;
@@ -35,30 +35,30 @@ typedef struct MarketTradeGood{
   int sell_price;
 } MarketTradeGood;
 
-typedef struct Market{
+typedef struct Market {
   char* symbol;
-  ARRAY_STRUCT(TradeGood,exports);
-  ARRAY_STRUCT(TradeGood,imports);
-  ARRAY_STRUCT(TradeGood,exchanges);
-  ARRAY_STRUCT(MarketTransaction,transactions);
+  ARRAY_STRUCT(TradeGood, exports);
+  ARRAY_STRUCT(TradeGood, imports);
+  ARRAY_STRUCT(TradeGood, exchanges);
+  ARRAY_STRUCT(MarketTransaction, transactions);
   ARRAY_STRUCT(MarketTradeGood, trade_goods);
 } Market;
 
-typedef struct RepairTransaction{
+typedef struct RepairTransaction {
   char* waypoint_symbol;
   char* ship_symbol;
   int total_price;
   time_t timestamp;
 } RepairTransaction;
 
-typedef struct ScrapTransaction{
+typedef struct ScrapTransaction {
   char* waypoint_symbol;
   char* ship_symbol;
   int total_price;
-  time_t timestamp; 
+  time_t timestamp;
 } ScrapTransaction;
 
-typedef struct Waypoint{
+typedef struct Waypoint {
   char* symbol;
   char* type;
   char* system_symbol;
@@ -68,8 +68,8 @@ typedef struct Waypoint{
   size_t orbitals_len;
   char** factions;
   size_t factions_len;
-  ARRAY_STRUCT(Trait,traits);
-  ARRAY_STRUCT(Trait,modifiers);
+  ARRAY_STRUCT(Trait, traits);
+  ARRAY_STRUCT(Trait, modifiers);
   Chart chart;
   bool is_under_construction;
 } Waypoint;

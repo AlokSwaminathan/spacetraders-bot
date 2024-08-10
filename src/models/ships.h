@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_RESPONSES_FLEETS
 #define SPACETRADERS_RESPONSES_FLEETS
 
-#include "responses.h"
+#include "models.h"
 
 typedef enum ShipStatus{
   IN_TRANSIT,

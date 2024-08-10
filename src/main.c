@@ -1,8 +1,6 @@
-#include <curl/curl.h>
-#include <stdio.h>
+#include "main.h"
 
-#include "constants.h"
-#include "json.h"
+#include <curl/curl.h>
 
 void parse_args(int argc, char** argv);
 void handle_exit(int signum);
@@ -12,7 +10,7 @@ char* token;
 CURL* curl;
 
 int main(int argc, char** argv) {
-  signal(SIGINT,handle_exit);
+  signal(SIGINT, handle_exit);
 
   curl = curl_easy_init();
   if (curl == NULL) {
@@ -20,7 +18,10 @@ int main(int argc, char** argv) {
     return 1;
   }
   parse_args(argc, argv);
-  while(1);
+
+  GameStatus status = get_game_status();
+  print_game_status(status);
+
   handle_exit(0);
 }
 

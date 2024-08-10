@@ -1,5 +1,8 @@
+.DEFAULT_GOAL := all
+
 CC := gcc
-CFLAGS := -Wall -Wextra -g -lcurl
+CFLAGS := -Wall -Wextra -g 
+LFLAGS := -lcurl
 
 SRCDIR := src
 BUILDDIR := build
@@ -8,7 +11,10 @@ TESTDIR := tests
 BUILDDIR_TEST := $(BUILDDIR)/$(TESTDIR)
 BUILDDIR_LIB := $(BUILDDIR)/$(LIBDIR)
 
-SRCS := $(wildcard $(SRCDIR)/*.c)
+SRCDIRS := $(shell find src -type d)
+BUILDDIRS := $(patsubst src/%, build/%, $(SRCDIRS))
+
+SRCS := $(shell find $(SRCDIR) -name '*.c')
 LIBS := $(wildcard $(LIBDIR)/*.c)
 TESTS := $(wildcard $(TESTDIR)/*.c)
 TEST_SCRIPTS := $(wildcard $(TESTDIR)/*.py)
@@ -21,11 +27,11 @@ TARGET := $(BUILDDIR)/spacetrader_bot
 
 $(TARGET) : $(SRCOBJS) $(LIBOBJS)
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $(SRCOBJS) $(LIBOBJS) -o $@
+	$(CC) $(SRCOBJS) $(LIBOBJS) -o $@ $(LFLAGS)
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) -I$(LIBDIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(LIBDIR) -c $< -o $@ 
 
 $(BUILDDIR_LIB)/%.o : $(LIBDIR)/%.c
 	@mkdir -p $(BUILDDIR_LIB)
@@ -40,7 +46,12 @@ $(TEST_TARGETS) : $(TESTOBJS) $(LIBOBJS)
 	$(CC) $(LIBOBJS) $(TESTOBJS) -o $@
 
 .PHONY: all
-all: $(TARGET)
+all: dirs $(TARGET)
+
+.PHONY: dirs
+dirs:
+	@echo $(BUILDDIRS)
+	@mkdir -p $(BUILDDIRS)
 
 .PHONY: test
 test: $(TEST_TARGETS)

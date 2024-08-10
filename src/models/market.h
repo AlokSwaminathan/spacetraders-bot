@@ -1,7 +1,8 @@
 #ifndef SPACETRADERS_MODELS_MARKET
 #define SPACETRADERS_MODELS_MARKET
 
-#include "models.h"
+#include "../util.h"
+#include "other.h"
 
 typedef struct TradeGood {
   char* symbol;
@@ -10,11 +11,11 @@ typedef struct TradeGood {
 } TradeGood;
 
 typedef enum TransactionType {
-  PURCHASE,
-  SELL,
+  TRANSACTION_TYPE_PURCHASE,
+  TRANSACTION_TYPE_SELL,
 } TransactionType;
 
-typedef struct MarketTransactions {
+typedef struct MarketTransaction {
   char* waypoint_symbol;
   char* ship_symbol;
   char* trade_symbol;

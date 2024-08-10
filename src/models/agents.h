@@ -1,7 +1,10 @@
 #ifndef SPACETRADERS_MODELS_AGENTS
 #define SPACETRADERS_MODELS_AGENTS
 
-#include "models.h"
+#include "../util.h"
+#include "contracts.h"
+#include "factions.h"
+#include "ships.h"
 
 typedef struct Agent {
   char* account_id;

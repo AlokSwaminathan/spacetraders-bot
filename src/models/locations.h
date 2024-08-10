@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_LOCATIONS
 #define SPACETRADERS_MODELS_LOCATIONS
 
-#include "models.h"
+#include "../util.h"
 
 typedef struct Chart {
   char* waypoint_symbol;
@@ -54,9 +54,9 @@ typedef struct ScannedWaypoint {
 } ScannedWaypoint;
 
 typedef enum DepositSize {
-  SMALL,
-  MODERATE,
-  LARGE,
+  DEP_SIZE_SMALL,
+  DEP_SIZE_MODERATE,
+  DEP_SIZE_LARGE,
 } DepositSize;
 
 typedef struct Survey {

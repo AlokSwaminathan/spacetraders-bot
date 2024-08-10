@@ -1,25 +1,25 @@
-#ifndef SPACETRADERS_MODELS_FLEETS
-#define SPACETRADERS_MODELS_FLEETS
+#ifndef SPACETRADERS_MODELS_SHIPS
+#define SPACETRADERS_MODELS_SHIPS
 
-#include "models.h"
+#include "../util.h"
+#include "other.h"
 
 typedef enum ShipStatus {
-  IN_TRANSIT,
-  IN_ORBIT,
-  DOCKED,
+  SHIP_STATUS_IN_TRANSIT,
+  SHIP_STATUS_IN_ORBIT,
+  SHIP_STATUS_DOCKED,
 } ShipStatus;
 
 typedef enum ShipFlightMode {
-  CRUISE,
-  DRIFT,
-  STEALTH,
-  CRUISE,
-  BURN,
+  SHIP_FLIGHT_MODE_CRUISE,
+  SHIP_FLIGHT_MODE_DRIFT,
+  SHIP_FLIGHT_MODE_STEALTH,
+  SHIP_FLIGHT_MODE_BURN,
 } ShipFlightMode;
 
 typedef enum ShipCrewRotation {
-  STRICT,
-  RELAXED
+  SHIP_CREW_ROTATION_STRICT,
+  SHIP_CREW_ROTATION_RELAXED
 } ShipCrewRotation;
 
 typedef struct ShipCrew {
@@ -115,17 +115,6 @@ typedef struct ShipFuel {
   time_t consumption_time;
 } ShipFuel;
 
-typedef struct Ship {
-  char* symbol;
-  ShipRegistration registration;
-  ShipNavigation nav;
-  ShipCoolDown cooldown;
-  ARRAY_STRUCT(ShipModule, modules);
-  ARRAY_STRUCT(ShipMount, mounts);
-  ShipCargo cargo;
-  ShipFuel fuel;
-} Ship;
-
 typedef struct ShipExtractionYield {
   char* symbol;
   int units;
@@ -160,10 +149,22 @@ typedef struct ShipNavRoute {
 typedef struct ShipNavigation {
   char* system_symbol;
   char* waypoint_symbol;
-
+  ShipNavRoute route;
   ShipStatus status;
   ShipFlightMode flight_mode;
 } ShipNavigation;
+
+
+typedef struct Ship {
+  char* symbol;
+  ShipRegistration registration;
+  ShipNavigation nav;
+  ShipCoolDown cooldown;
+  ARRAY_STRUCT(ShipModule, modules);
+  ARRAY_STRUCT(ShipMount, mounts);
+  ShipCargo cargo;
+  ShipFuel fuel;
+} Ship;
 
 typedef struct ScannerShip {
   char* symbol;
@@ -177,9 +178,9 @@ typedef struct ScannerShip {
 } ScannerShip;
 
 typedef enum ShipComponent {
-  FRAME,
-  REACTOR,
-  ENGINE
+  SHIP_COMPONENT_FRAME,
+  SHIP_COMPONENT_REACTOR,
+  SHIP_COMPONENT_ENGINE
 } ShipComponent;
 
 typedef struct ShipConditionEvent {

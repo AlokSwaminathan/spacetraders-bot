@@ -1,21 +1,21 @@
 #ifndef SPACETRADERS_MODELS_OTHER
 #define SPACETRADERS_MODELS_OTHER
 
-#include "models.h"
+#include "../util.h"
 
 typedef enum ActivityLevel {
-  WEAK,
-  GROWING,
-  STRONG,
-  RESTRICTED,
+  ACTIVITY_LEVEL_WEAK,
+  ACTIVITY_LEVEL_GROWING,
+  ACTIVITY_LEVEL_STRONG,
+  ACTIVITY_LEVEL_RESTRICTED,
 } ActivityLevel;
 
 typedef enum SupplyLevel {
-  SCARCE,
-  LIMITED,
-  MODERATE,
-  HIGH,
-  ABUNDANT,
+  SUPPLY_LEVEL_SCARCE,
+  SUPPLY_LEVEL_LIMITED,
+  SUPPLY_LEVEL_MODERATE,
+  SUPPLY_LEVEL_HIGH,
+  SUPPLY_LEVEL_ABUNDANT,
 } SupplyLevel;
 
 typedef struct ConstructionMaterials {

@@ -2,6 +2,7 @@
 #define SPACETRADERS_UTILS
 
 #include <time.h>
+#include <stdbool.h>
 
 #define ARRAY_STRUCT(struct_def, name) \
   struct {                             \

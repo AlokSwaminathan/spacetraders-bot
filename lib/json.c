@@ -6,30 +6,30 @@
 #include <stdlib.h>
 #include <string.h>
 
-// "private" functions
-char *json_parse_object(char *json_string, JsonNode *json_node);
-char *json_parse_kv_pair(char *json_string, JsonNode *json_node);
-char *json_parse_key(char *json_string, JsonNode *json_node);
-char *json_parse_string(char *json_string, JsonNode *json_node);
-char *json_parse_num(char *json_string, JsonNode *json_node);
-char *json_parse_array(char *json_string, JsonNode *json_node);
-char *json_parse_literal(char *json_string, JsonNode *json_node);
-char *json_parse_symbol(char *json_string, JsonNode *json_node);
+// Private functions
+static char *json_parse_object(char *json_string, JsonNode *json_node);
+static char *json_parse_kv_pair(char *json_string, JsonNode *json_node);
+static char *json_parse_key(char *json_string, JsonNode *json_node);
+static char *json_parse_string(char *json_string, JsonNode *json_node);
+static char *json_parse_num(char *json_string, JsonNode *json_node);
+static char *json_parse_array(char *json_string, JsonNode *json_node);
+static char *json_parse_literal(char *json_string, JsonNode *json_node);
+static char *json_parse_symbol(char *json_string, JsonNode *json_node);
 
-int json_str_escaped_len(char *str);
-int json_double_len_as_str(double d);
-int json_long_long_len_as_str(long long ll);
+static int json_str_escaped_len(char *str);
+static int json_double_len_as_str(double d);
+static int json_long_long_len_as_str(long long ll);
 
-JsonNode *json_node_default(void);
+static JsonNode *json_node_default(void);
 
-char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer);
+static char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer);
 
-int json_node_str_len(JsonNode *json_node, int indent, int layer);
+static int json_node_str_len(JsonNode *json_node, int indent, int layer);
 
-char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
-char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
-char JSON_FALSE_STR[] = {'f', 'a', 'l', 's', 'e'};
-char JSON_DOUBLE_LENGTH_STORAGE[JSON_DOUBLE_MAX_PRECISION * 2 + 5];
+static char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
+static char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
+static char JSON_FALSE_STR[] = {'f', 'a', 'l', 's', 'e'};
+static char JSON_DOUBLE_LENGTH_STORAGE[JSON_DOUBLE_MAX_PRECISION * 2 + 5];
 
 void free_json(JsonNode *json_node) {
   if (json_node == NULL) return;
@@ -79,7 +79,7 @@ bool validate_json(char *json_string) {
   return parse_json(json_string) != NULL;
 }
 
-char *json_parse_symbol(char *json_string, JsonNode *json_node) {
+static char *json_parse_symbol(char *json_string, JsonNode *json_node) {
   char c = *json_string;
   char *(*parse_func)(char *, JsonNode *);
   if (JSON_IS_NUM_START(c)) {
@@ -98,7 +98,7 @@ char *json_parse_symbol(char *json_string, JsonNode *json_node) {
   return parse_func(json_string, json_node);
 }
 
-char *json_parse_object(char *json_string, JsonNode *json_node) {
+static char *json_parse_object(char *json_string, JsonNode *json_node) {
   // Set up node
   json_node->type = JSON_TYPE_OBJECT;
   json_node->ele_count = 0;
@@ -156,7 +156,7 @@ char *json_parse_object(char *json_string, JsonNode *json_node) {
   return json_string + 1;
 }
 
-char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
+static char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
   json_string = json_parse_key(json_string, json_node);
   if (json_string == NULL) return NULL;
   JSON_STRING_READ_WHITESPACE(json_string);
@@ -168,7 +168,7 @@ char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
   return json_parse_symbol(json_string, json_node);
 }
 
-char *json_parse_key(char *json_string, JsonNode *json_node) {
+static char *json_parse_key(char *json_string, JsonNode *json_node) {
   json_string = json_parse_string(json_string, json_node);
   if (json_string == NULL) return NULL;
   json_node->key = json_node->value_str;
@@ -176,7 +176,7 @@ char *json_parse_key(char *json_string, JsonNode *json_node) {
   return json_string;
 }
 
-char *json_parse_array(char *json_string, JsonNode *json_node) {
+static char *json_parse_array(char *json_string, JsonNode *json_node) {
   // Set up node
   json_node->type = JSON_TYPE_ARRAY;
   json_node->ele_count = 0;
@@ -226,7 +226,7 @@ char *json_parse_array(char *json_string, JsonNode *json_node) {
   }
 }
 
-char *json_parse_string(char *json_string, JsonNode *json_node) {
+static char *json_parse_string(char *json_string, JsonNode *json_node) {
   json_string++;
   // Get length of string
   int len = 0;
@@ -304,7 +304,7 @@ char *json_parse_string(char *json_string, JsonNode *json_node) {
   return json_string + 1;
 }
 
-char *json_parse_num(char *json_string, JsonNode *json_node) {
+static char *json_parse_num(char *json_string, JsonNode *json_node) {
   long long l = 0;
   double d = 0.0;
 
@@ -408,7 +408,7 @@ char *json_parse_num(char *json_string, JsonNode *json_node) {
   return json_string;
 }
 
-char *json_parse_literal(char *json_string, JsonNode *json_node) {
+static char *json_parse_literal(char *json_string, JsonNode *json_node) {
   char *literal_str;
   int sz;
   char c = *json_string;
@@ -437,7 +437,7 @@ char *json_parse_literal(char *json_string, JsonNode *json_node) {
   return json_string + sz;
 }
 
-JsonNode *json_node_default(void) {
+static JsonNode *json_node_default(void) {
   JsonNode *node = (JsonNode *)malloc(sizeof(JsonNode));
   if (node == NULL) return NULL;
   node->parent = NULL;
@@ -468,7 +468,7 @@ bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size) {
   return true;
 }
 
-char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
+static char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
   if (indent > -1) JSON_STRING_PAD_WHITESPACE(buf, layer * indent);
   if (json_node->key != NULL) {
     JsonNode key_node = *json_node;
@@ -599,7 +599,7 @@ char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
   return NULL;
 }
 
-int json_node_str_len(JsonNode *json_node, int indent, int layer) {
+static int json_node_str_len(JsonNode *json_node, int indent, int layer) {
   if (json_node == NULL) return 0;
   int len = 0;
   if (indent > -1) {
@@ -651,7 +651,7 @@ int json_node_str_len(JsonNode *json_node, int indent, int layer) {
   return len;
 }
 
-int json_double_len_as_str(double d) {
+static int json_double_len_as_str(double d) {
   if (d == 0.0) return 0;
   double d_abs = fabs(d);
   if (d_abs > JSON_DOUBLE_MIN_NORMAL && d_abs < JSON_DOUBLE_MAX_NORMAL) {
@@ -676,7 +676,7 @@ int json_double_len_as_str(double d) {
   }
 }
 
-int json_long_long_len_as_str(long long ll) {
+static int json_long_long_len_as_str(long long ll) {
   if (ll == 0) return 1;
 
   int len = 0;
@@ -692,7 +692,7 @@ int json_long_long_len_as_str(long long ll) {
   return len;
 }
 
-int json_str_escaped_len(char *str) {
+static int json_str_escaped_len(char *str) {
   int len = 0;
   for (char *c = str; *c != '\0'; c++) {
     if (JSON_IS_SPECIAL_CHAR(*c)) len++;

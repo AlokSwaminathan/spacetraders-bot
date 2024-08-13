@@ -3,8 +3,10 @@
 
 #include <string.h>
 
-// Response constants
 #define MAX_RESPONSE_LEN 65536
+
+#define BEARER_TOKEN_START "Authorization: Bearer "
+#define BEARER_TOKEN_START_LEN strlen(BEARER_TOKEN_START)
 
 // CLI flag constants
 #define CLI_HELP_MESSAGE                                                  \

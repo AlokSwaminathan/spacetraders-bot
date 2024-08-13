@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   if (!get_game_status(&status)) {
     printf("Failed to get game status\n");
   } else {
-    // print_game_status(&status);
+    print_game_status(&status);
   }
 
   handle_exit(0);
@@ -72,7 +72,15 @@ static void curl_init() {
     exit(1);
   }
 
+  curl_headers = curl_slist_append(curl_headers, "Content-Type: application/json");
   curl_headers = curl_slist_append(curl_headers, "Accept: application/json");
+
+  // Add bearer auth token
+  // char header_token[BEARER_TOKEN_START_LEN + strlen(token) + 1];
+  // memcpy(header_token, BEARER_TOKEN_START, BEARER_TOKEN_START_LEN);
+  // memcpy(header_token + BEARER_TOKEN_START_LEN, token, strlen(token)+1);
+  // curl_headers = curl_slist_append(curl_headers, (const char*)header_token);
+
   curl_easy_setopt(curl_hnd, CURLOPT_HTTPHEADER, curl_headers);
 
   curl_easy_setopt(curl_hnd, CURLOPT_WRITEFUNCTION, curl_response_to_json);

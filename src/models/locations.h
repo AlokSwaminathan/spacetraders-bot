@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_LOCATIONS
 #define SPACETRADERS_MODELS_LOCATIONS
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct Chart {
   char* waypoint_symbol;

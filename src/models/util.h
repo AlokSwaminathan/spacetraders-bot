@@ -1,8 +1,5 @@
-#ifndef SPACETRADERS_UTILS
-#define SPACETRADERS_UTILS
-
-#include <time.h>
-#include <stdbool.h>
+#ifndef SPACETRADERS_MODELS_UTILS
+#define SPACETRADERS_MODELS_UTILS
 
 #define ARRAY_STRUCT(struct_def, name) \
   struct {                             \

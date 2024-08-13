@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_FACTIONS
 #define SPACETRADERS_MODELS_FACTIONS
 
-#include "../util.h"
+#include "util.h"
 
 typedef struct Faction {
   char* symbol;

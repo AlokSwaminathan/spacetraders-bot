@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_CONTRACTS
 #define SPACETRADERS_MODELS_CONTRACTS
 
-#include "../util.h"
+#include "util.h"
 
 typedef enum ContractType {
   CONTRACT_PROCUREMENT,

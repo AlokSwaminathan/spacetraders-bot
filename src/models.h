@@ -3,6 +3,7 @@
 
 #include <time.h>
 
+#include "models/util.h"
 #include "models/agents.h"
 #include "models/contracts.h"
 #include "models/factions.h"

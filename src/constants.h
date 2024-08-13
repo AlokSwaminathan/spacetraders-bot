@@ -3,6 +3,9 @@
 
 #include <string.h>
 
+// Response constants
+#define MAX_RESPONSE_LEN 65536
+
 // CLI flag constants
 #define CLI_HELP_MESSAGE                                                  \
   "%s --help\n"                                                           \

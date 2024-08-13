@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_MARKET
 #define SPACETRADERS_MODELS_MARKET
 
-#include "../util.h"
+#include "util.h"
 #include "other.h"
 
 typedef struct TradeGood {

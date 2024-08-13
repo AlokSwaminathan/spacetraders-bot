@@ -5,6 +5,5 @@
 #include "json.h"
 #include "models.h"
 #include "requests.h"
-#include "util.h"
 
 #endif

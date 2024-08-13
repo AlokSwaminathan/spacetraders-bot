@@ -1,10 +1,11 @@
 #ifndef SPACETRADER_REQUEST_STATUS
 #define SPACETRADER_REQUEST_STATUS
 
+#include <stdbool.h>
 #include "../models.h"
 
-GameStatus get_game_status(void);
+bool get_game_status(GameStatus *status);
 
-void print_game_status(GameStatus status);
+void print_game_status(GameStatus *status);
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_SHIPS
 #define SPACETRADERS_MODELS_SHIPS
 
-#include "../util.h"
+#include "util.h"
 #include "other.h"
 
 typedef enum ShipStatus {

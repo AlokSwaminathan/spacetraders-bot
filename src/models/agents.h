@@ -1,7 +1,7 @@
 #ifndef SPACETRADERS_MODELS_AGENTS
 #define SPACETRADERS_MODELS_AGENTS
 
-#include "../util.h"
+#include "util.h"
 #include "contracts.h"
 #include "factions.h"
 #include "ships.h"

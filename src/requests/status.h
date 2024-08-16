@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include "../models.h"
 
-bool get_game_status(GameStatus *status);
+bool get_game_status(struct GameStatus *status);
 
-void print_game_status(GameStatus *status);
+void print_game_status(struct GameStatus *status);
 
 #endif

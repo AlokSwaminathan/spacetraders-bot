@@ -10,7 +10,7 @@
   switch ((tmp_node)->type) {                  \
     case JSON_TYPE_OBJECT:                     \
     case JSON_TYPE_ARRAY:                      \
-      *(JsonNode**)&(value) = node;            \
+      *(struct JsonNode**)&(value) = node;     \
       break;                                   \
     case JSON_TYPE_STRING:                     \
       *(char**)&(value) = node->value_str;     \
@@ -29,18 +29,18 @@
       break;                                   \
   };
 
-#define JSON_OBJECT_GET_SET(object, key, value, type)  \
-  {                                                    \
-    JsonNode* tmp_node = json_object_get(object, key); \
-    ASSERT_NODE(tmp_node, type);                       \
-    JSON_SET_VALUE(tmp_node, value);                   \
+#define JSON_OBJECT_GET_SET(object, key, value, type)         \
+  {                                                           \
+    struct JsonNode* tmp_node = json_object_get(object, key); \
+    ASSERT_NODE(tmp_node, type);                              \
+    JSON_SET_VALUE(tmp_node, value);                          \
   }
 
-#define JSON_ARRAY_GET_SET(array, index, value, type)  \
-  {                                                    \
-    JsonNode* tmp_node = json_array_get(array, index); \
-    ASSERT_NODE(tmp_node, type);                       \
-    JSON_SET_VALUE(tmp_node, value);                   \
+#define JSON_ARRAY_GET_SET(array, index, value, type)         \
+  {                                                           \
+    struct JsonNode* tmp_node = json_array_get(array, index); \
+    ASSERT_NODE(tmp_node, type);                              \
+    JSON_SET_VALUE(tmp_node, value);                          \
   }
 
 // curr is the active node
@@ -50,9 +50,9 @@
     (array_struct).len = (array)->ele_count;                                             \
     (array_struct).start = malloc(sizeof(*((array_struct).start)) * (array_struct).len); \
     if ((array_struct).start == NULL && (array_struct).len != 0) return false;           \
-    JsonNode* curr = (array)->child;                                                     \
+    struct JsonNode* curr = (array)->child;                                                     \
     for (int i = 0; curr != NULL && (array)->ele_count != 0; curr = curr->next, i++) {   \
-      code;                                                                               \
+      code;                                                                              \
     }                                                                                    \
   }
 

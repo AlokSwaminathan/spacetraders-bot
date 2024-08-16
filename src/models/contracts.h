@@ -3,38 +3,38 @@
 
 #include "util.h"
 
-typedef enum ContractType {
+enum ContractType {
   CONTRACT_PROCUREMENT,
   CONTRACT_TRANSPORT,
   CONTRACT_SHUTTLE,
-} ContractType;
+};
 
-typedef struct ContractDeliverGood {
+struct ContractDeliverGood {
   char* trade_symbol;
   char* dest_symbol;
   int units_required;
   int units_fulfilled;
-} ContractDeliverGood;
+};
 
-typedef struct ContractPayment {
+struct ContractPayment {
   int on_accepted;
   int on_fulfilled;
-} ContractPayment;
+};
 
-typedef struct ContractTerms {
+struct ContractTerms {
   time_t deadline;
-  ContractPayment payment;
+  struct ContractPayment payment;
   ARRAY_STRUCT(ContractDeliverGood, deliveries);
-} ContractTerms;
+};
 
-typedef struct Contract {
+struct Contract {
   char* id;
   char* faction_symbol;
-  ContractType type;
+  enum ContractType type;
   bool accepted;
   bool fulfilled;
-  ContractTerms terms;
+  struct ContractTerms terms;
   time_t accept_deadline;
-} Contract;
+};
 
 #endif

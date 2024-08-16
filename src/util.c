@@ -1,6 +1,7 @@
 #include "util.h"
 
 #include <curl/curl.h>
+#include <stdlib.h>
 
 extern char* agent_symbol;
 extern char* token;

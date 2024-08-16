@@ -31,7 +31,7 @@ struct CurlJsonResponse curl_get_json(CURL* hnd) {
     return resp;
   }
 
-  JsonNode* root = parse_json(curl_response.data);
+  struct JsonNode* root = parse_json(curl_response.data);
 
   if (root == NULL) {
     resp.error->msg = "Failed to parse response to json";
@@ -52,7 +52,7 @@ struct CurlJsonResponse curl_get_json(CURL* hnd) {
   return resp;
 }
 
-JsonNode* handle_curl_error(struct CurlJsonResponse resp) {
+struct JsonNode* handle_curl_error(struct CurlJsonResponse resp) {
   if (resp.error == NULL) {
     return resp.root;
   }
@@ -61,7 +61,7 @@ JsonNode* handle_curl_error(struct CurlJsonResponse resp) {
   fprintf(stderr, "Main message: %s\n", resp.error->msg);
   fprintf(stderr, "Error code: %d\n", resp.error->code);
   fprintf(stderr, "Error data\n");
-  for (int i = 0; i < resp.error->data.len; i++) {
+  for (size_t i = 0; i < resp.error->data.len; i++) {
     fprintf(stderr, "JSON Key: %s, Error: %s\n", resp.error->data.start[i].key, resp.error->data.start[i].msg);
   }
 

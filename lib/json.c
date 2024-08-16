@@ -7,39 +7,39 @@
 #include <string.h>
 
 // Private functions
-static char *json_parse_object(char *json_string, JsonNode *json_node);
-static char *json_parse_kv_pair(char *json_string, JsonNode *json_node);
-static char *json_parse_key(char *json_string, JsonNode *json_node);
-static char *json_parse_string(char *json_string, JsonNode *json_node);
-static char *json_parse_num(char *json_string, JsonNode *json_node);
-static char *json_parse_array(char *json_string, JsonNode *json_node);
-static char *json_parse_literal(char *json_string, JsonNode *json_node);
-static char *json_parse_symbol(char *json_string, JsonNode *json_node);
+static char *json_parse_object(char *json_string, struct JsonNode *json_node);
+static char *json_parse_kv_pair(char *json_string, struct JsonNode *json_node);
+static char *json_parse_key(char *json_string, struct JsonNode *json_node);
+static char *json_parse_string(char *json_string, struct JsonNode *json_node);
+static char *json_parse_num(char *json_string, struct JsonNode *json_node);
+static char *json_parse_array(char *json_string, struct JsonNode *json_node);
+static char *json_parse_literal(char *json_string, struct JsonNode *json_node);
+static char *json_parse_symbol(char *json_string, struct JsonNode *json_node);
 
 static int json_str_escaped_len(char *str);
 static int json_double_len_as_str(double d);
 static int json_long_long_len_as_str(long long ll);
 
-static JsonNode *json_node_default(void);
+static struct JsonNode *json_node_default(void);
 
-static char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer);
+static char *json_dump_node(struct JsonNode *json_node, char *buf, int indent, int layer);
 
-static int json_node_str_len(JsonNode *json_node, int indent, int layer);
+static int json_node_str_len(struct JsonNode *json_node, int indent, int layer);
 
 static char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
 static char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
 static char JSON_FALSE_STR[] = {'f', 'a', 'l', 's', 'e'};
 static char JSON_DOUBLE_LENGTH_STORAGE[JSON_DOUBLE_MAX_PRECISION * 2 + 5];
 
-void free_json(JsonNode *json_node) {
+void free_json(struct JsonNode *json_node) {
   if (json_node == NULL) return;
   free(json_node->key);
   if (json_node->type == JSON_TYPE_STRING) {
     free(json_node->value_str);
   }
   if (json_node->type == JSON_TYPE_OBJECT || json_node->type == JSON_TYPE_ARRAY) {
-    JsonNode *curr = json_node->child;
-    JsonNode *next;
+    struct JsonNode *curr = json_node->child;
+    struct JsonNode *next;
     for (uint32_t i = 0; i < json_node->ele_count; i++) {
       next = curr->next;
       free_json(curr);
@@ -49,10 +49,10 @@ void free_json(JsonNode *json_node) {
   free(json_node);
 }
 
-JsonNode *parse_json(char *json_string) {
+struct JsonNode *parse_json(char *json_string) {
   if (json_string == NULL) return NULL;
 
-  JsonNode *root = json_node_default();
+  struct JsonNode *root = json_node_default();
   if (root == NULL) return NULL;
 
   JSON_STRING_READ_WHITESPACE(json_string);
@@ -79,9 +79,9 @@ bool validate_json(char *json_string) {
   return parse_json(json_string) != NULL;
 }
 
-static char *json_parse_symbol(char *json_string, JsonNode *json_node) {
+static char *json_parse_symbol(char *json_string, struct JsonNode *json_node) {
   char c = *json_string;
-  char *(*parse_func)(char *, JsonNode *);
+  char *(*parse_func)(char *, struct JsonNode *);
   if (JSON_IS_NUM_START(c)) {
     parse_func = json_parse_num;
   } else if (JSON_IS_ARR_START(c)) {
@@ -98,14 +98,14 @@ static char *json_parse_symbol(char *json_string, JsonNode *json_node) {
   return parse_func(json_string, json_node);
 }
 
-static char *json_parse_object(char *json_string, JsonNode *json_node) {
+static char *json_parse_object(char *json_string, struct JsonNode *json_node) {
   // Set up node
   json_node->type = JSON_TYPE_OBJECT;
   json_node->ele_count = 0;
 
   json_string++;
-  JsonNode *prev = NULL;
-  JsonNode *curr = NULL;
+  struct JsonNode *prev = NULL;
+  struct JsonNode *curr = NULL;
   JSON_STRING_READ_WHITESPACE(json_string);
   if (*json_string == JSON_RC_BRACKET) return json_string + 1;
   while (true) {
@@ -156,7 +156,7 @@ static char *json_parse_object(char *json_string, JsonNode *json_node) {
   return json_string + 1;
 }
 
-static char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
+static char *json_parse_kv_pair(char *json_string, struct JsonNode *json_node) {
   json_string = json_parse_key(json_string, json_node);
   if (json_string == NULL) return NULL;
   JSON_STRING_READ_WHITESPACE(json_string);
@@ -168,7 +168,7 @@ static char *json_parse_kv_pair(char *json_string, JsonNode *json_node) {
   return json_parse_symbol(json_string, json_node);
 }
 
-static char *json_parse_key(char *json_string, JsonNode *json_node) {
+static char *json_parse_key(char *json_string, struct JsonNode *json_node) {
   json_string = json_parse_string(json_string, json_node);
   if (json_string == NULL) return NULL;
   json_node->key = json_node->value_str;
@@ -176,7 +176,7 @@ static char *json_parse_key(char *json_string, JsonNode *json_node) {
   return json_string;
 }
 
-static char *json_parse_array(char *json_string, JsonNode *json_node) {
+static char *json_parse_array(char *json_string, struct JsonNode *json_node) {
   // Set up node
   json_node->type = JSON_TYPE_ARRAY;
   json_node->ele_count = 0;
@@ -187,8 +187,8 @@ static char *json_parse_array(char *json_string, JsonNode *json_node) {
   JSON_STRING_READ_WHITESPACE(json_string);
   if (*json_string == JSON_R_BRACKET) return json_string + 1;
 
-  JsonNode *prev = NULL;
-  JsonNode *curr = NULL;
+  struct JsonNode *prev = NULL;
+  struct JsonNode *curr = NULL;
   while (true) {
     JSON_STRING_READ_WHITESPACE(json_string);
     if (*json_string == '\0') return NULL;
@@ -226,7 +226,7 @@ static char *json_parse_array(char *json_string, JsonNode *json_node) {
   }
 }
 
-static char *json_parse_string(char *json_string, JsonNode *json_node) {
+static char *json_parse_string(char *json_string, struct JsonNode *json_node) {
   json_string++;
   // Get length of string
   int len = 0;
@@ -304,7 +304,7 @@ static char *json_parse_string(char *json_string, JsonNode *json_node) {
   return json_string + 1;
 }
 
-static char *json_parse_num(char *json_string, JsonNode *json_node) {
+static char *json_parse_num(char *json_string, struct JsonNode *json_node) {
   long long l = 0;
   double d = 0.0;
 
@@ -336,7 +336,7 @@ static char *json_parse_num(char *json_string, JsonNode *json_node) {
       if (is_double) {
         d = (d * 10) + (c - '0');
       } else {
-        if ((double)l * 10 + (c - '0') > (double)__LONG_LONG_MAX__/JSON_DOUBLE_COMPARISON_TOLERANCE) {
+        if ((double)l * 10 + (c - '0') > (double)__LONG_LONG_MAX__ / JSON_DOUBLE_COMPARISON_TOLERANCE) {
           is_double = true;
           d = ((double)l * 10) + (c - '0');
         } else {
@@ -377,7 +377,7 @@ static char *json_parse_num(char *json_string, JsonNode *json_node) {
         d = d * pow(10, sign * exponent);
       } else {
         d = l * pow(10, sign * exponent);
-        if (d > __LONG_LONG_MAX__/JSON_DOUBLE_COMPARISON_TOLERANCE) {
+        if (d > __LONG_LONG_MAX__ / JSON_DOUBLE_COMPARISON_TOLERANCE) {
           is_double = true;
         } else {
           l = d;
@@ -408,7 +408,7 @@ static char *json_parse_num(char *json_string, JsonNode *json_node) {
   return json_string;
 }
 
-static char *json_parse_literal(char *json_string, JsonNode *json_node) {
+static char *json_parse_literal(char *json_string, struct JsonNode *json_node) {
   char *literal_str;
   int sz;
   char c = *json_string;
@@ -437,8 +437,8 @@ static char *json_parse_literal(char *json_string, JsonNode *json_node) {
   return json_string + sz;
 }
 
-static JsonNode *json_node_default(void) {
-  JsonNode *node = (JsonNode *)malloc(sizeof(JsonNode));
+static struct JsonNode *json_node_default(void) {
+  struct JsonNode *node = (struct JsonNode *)malloc(sizeof(struct JsonNode));
   if (node == NULL) return NULL;
   node->parent = NULL;
   node->prev = NULL;
@@ -450,7 +450,7 @@ static JsonNode *json_node_default(void) {
   return node;
 }
 
-bool json_dump(JsonNode *root, char *buf, int buf_size) {
+bool json_dump(struct JsonNode *root, char *buf, int buf_size) {
   if (root == NULL) return false;
   int str_size = json_node_str_len(root, -1, 0);
   if (buf_size < str_size + 1) return false;
@@ -459,7 +459,7 @@ bool json_dump(JsonNode *root, char *buf, int buf_size) {
   return true;
 }
 
-bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size) {
+bool json_pretty_print(struct JsonNode *root, int indent, char *buf, int buf_size) {
   if (root == NULL) return false;
   int str_size = json_node_str_len(root, indent, 0);
   if (buf_size < str_size + 1) return false;
@@ -468,10 +468,10 @@ bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size) {
   return true;
 }
 
-static char *json_dump_node(JsonNode *json_node, char *buf, int indent, int layer) {
+static char *json_dump_node(struct JsonNode *json_node, char *buf, int indent, int layer) {
   if (indent > -1) JSON_STRING_PAD_WHITESPACE(buf, layer * indent);
   if (json_node->key != NULL) {
-    JsonNode key_node = *json_node;
+    struct JsonNode key_node = *json_node;
     key_node.value_str = key_node.key;
     key_node.key = NULL;
     key_node.ele_count = strlen(key_node.value_str);
@@ -495,7 +495,7 @@ static char *json_dump_node(JsonNode *json_node, char *buf, int indent, int laye
       if (indent > -1) {
         JSON_STRING_ADD_NEWLINE(buf);
       }
-      JsonNode *curr = json_node->child;
+      struct JsonNode *curr = json_node->child;
       while (curr != NULL) {
         buf = json_dump_node(curr, buf, indent, layer + 1);
         if (curr->next != NULL) {
@@ -599,7 +599,7 @@ static char *json_dump_node(JsonNode *json_node, char *buf, int indent, int laye
   return NULL;
 }
 
-static int json_node_str_len(JsonNode *json_node, int indent, int layer) {
+static int json_node_str_len(struct JsonNode *json_node, int indent, int layer) {
   if (json_node == NULL) return 0;
   int len = 0;
   if (indent > -1) {
@@ -615,7 +615,7 @@ static int json_node_str_len(JsonNode *json_node, int indent, int layer) {
         len++;                  // Add new line after starting bracket
         len += layer * indent;  // Add indent before ending bracket
       }
-      JsonNode *curr = json_node->child;
+      struct JsonNode *curr = json_node->child;
       while (curr != NULL) {
         len += json_node_str_len(curr, indent, layer + 1);
         curr = curr->next;
@@ -701,19 +701,19 @@ static int json_str_escaped_len(char *str) {
   return len;
 }
 
-int json_dump_str_len(JsonNode *root) {
+int json_dump_str_len(struct JsonNode *root) {
   return json_node_str_len(root, INT32_MIN, 0);
 }
 
-int json_pretty_dump_str_len(JsonNode *root, int indent) {
+int json_pretty_dump_str_len(struct JsonNode *root, int indent) {
   return json_node_str_len(root, indent, 0);
 }
 
 // Helper functions
 
-JsonNode *json_object_get(JsonNode *object, char *key) {
+struct JsonNode *json_object_get(struct JsonNode *object, char *key) {
   if (object == NULL || object->type != JSON_TYPE_OBJECT) return NULL;
-  JsonNode *curr = object->child;
+  struct JsonNode *curr = object->child;
   while (curr != NULL) {
     if (strcmp(curr->key, key) == 0) {
       return curr;
@@ -723,17 +723,17 @@ JsonNode *json_object_get(JsonNode *object, char *key) {
   return NULL;
 }
 
-JsonNode *json_array_get(JsonNode *array, size_t index) {
+struct JsonNode *json_array_get(struct JsonNode *array, size_t index) {
   if (array == NULL || array->type != JSON_TYPE_ARRAY) return NULL;
   if (index >= array->ele_count) return NULL;
-  JsonNode *curr = array->child;
+  struct JsonNode *curr = array->child;
   for (size_t i = 0; i < index; i++, curr = curr->next);
   return curr;
 }
 
-JsonNode *json_array_set(JsonNode *array, size_t index, JsonNode *val) {
+struct JsonNode *json_array_set(struct JsonNode *array, size_t index, struct JsonNode *val) {
   if (index >= array->ele_count) return NULL;
-  JsonNode *curr = json_array_get(array, index);
+  struct JsonNode *curr = json_array_get(array, index);
   val->prev = curr->prev;
   val->parent = array;
   val->next = curr->next;
@@ -744,14 +744,14 @@ JsonNode *json_array_set(JsonNode *array, size_t index, JsonNode *val) {
   return curr;
 }
 
-bool json_array_insert(JsonNode *array, size_t index, JsonNode *val) {
+bool json_array_insert(struct JsonNode *array, size_t index, struct JsonNode *val) {
   if (index > array->ele_count) return false;
   if (index == array->ele_count) {
     json_array_append(array, val);
     return true;
   }
   if (index == 0) array->child = val;
-  JsonNode *next = json_array_get(array, index);
+  struct JsonNode *next = json_array_get(array, index);
   val->parent = array;
   val->is_array_ele = true;
   val->next = next;
@@ -761,8 +761,8 @@ bool json_array_insert(JsonNode *array, size_t index, JsonNode *val) {
   return true;
 }
 
-void json_array_append(JsonNode *array, JsonNode *val) {
-  JsonNode *last = json_array_get(array, array->ele_count - 1);
+void json_array_append(struct JsonNode *array, struct JsonNode *val) {
+  struct JsonNode *last = json_array_get(array, array->ele_count - 1);
   val->next = NULL;
   val->parent = array;
   val->prev = last;
@@ -774,9 +774,9 @@ void json_array_append(JsonNode *array, JsonNode *val) {
   last->next = val;
 }
 
-JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val) {
+struct JsonNode *json_object_set_key_val_pair(struct JsonNode *object, char *key, struct JsonNode *val) {
   if (object->type != JSON_TYPE_OBJECT) return NULL;
-  JsonNode *old_val = json_object_get(object, key);
+  struct JsonNode *old_val = json_object_get(object, key);
   val->key = key;
   val->parent = object;
   if (old_val != NULL) {
@@ -787,7 +787,7 @@ JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *va
     if (object->child == old_val) object->child = val;
     return old_val;
   } else {
-    JsonNode *old_child = object->child;
+    struct JsonNode *old_child = object->child;
     if (old_child != NULL) old_child->prev = val;
     val->next = old_child;
     val->prev = NULL;
@@ -796,24 +796,24 @@ JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *va
   }
 }
 
-bool json_object_change_key(JsonNode *object, char *original, char *new) {
+bool json_object_change_key(struct JsonNode *object, char *original, char *new) {
   if (object->type != JSON_TYPE_OBJECT) return false;
-  JsonNode *old_val = json_object_get(object, original);
+  struct JsonNode *old_val = json_object_get(object, original);
   if (original == NULL || json_object_get(object, new)) return false;
   free(old_val->key);
   old_val->key = new;
   return true;
 }
 
-void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value) {
+void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, void *value) {
   json_node->type = type;
   switch (type) {
     case JSON_TYPE_ARRAY:
     case JSON_TYPE_OBJECT: {
-      json_node->child = (JsonNode *)value;
+      json_node->child = (struct JsonNode *)value;
 
       // Calculate number of elements
-      JsonNode *curr = json_node->child;
+      struct JsonNode *curr = json_node->child;
       json_node->ele_count = 0;
       while (curr != NULL) {
         json_node->ele_count++;
@@ -840,8 +840,8 @@ void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value) {
   }
 }
 
-JsonNode *json_new_node(JsonDataType type, void *value) {
-  JsonNode *node = json_node_default();
+struct JsonNode *json_new_node(enum JsonDataType type, void *value) {
+  struct JsonNode *node = json_node_default();
   if (node == NULL) return NULL;
   json_node_set_value(node, type, value);
   return node;

@@ -2,7 +2,7 @@
 
 #include "util.h"
 
-bool parse_error_response(JsonNode *root, ErrorResponse *error) {
+bool parse_error_response(struct JsonNode *root, struct ErrorResponse *error) {
   error->root = root;
 
   JSON_OBJECT_GET_SET(root, "error", root, JSON_TYPE_OBJECT);
@@ -11,7 +11,7 @@ bool parse_error_response(JsonNode *root, ErrorResponse *error) {
 
   JSON_OBJECT_GET_SET(root, "code", error->code, JSON_TYPE_LONG_LONG);
 
-  JsonNode *error_data = NULL;
+  struct JsonNode *error_data = NULL;
   JSON_OBJECT_GET_SET(root, "data", error->data, JSON_TYPE_OBJECT);
 
   JSON_OBJECT_MAP(error_data, error->data, {
@@ -23,7 +23,7 @@ bool parse_error_response(JsonNode *root, ErrorResponse *error) {
   return true;
 }
 
-void free_error_response(ErrorResponse error) {
-  free_json(error.root);
-  free(error.data.start);
+void free_error_response(struct ErrorResponse *error) {
+  free_json(error->root);
+  free(error->data.start);
 };

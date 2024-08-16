@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 
   curl_add_auth();
 
-  GameStatus status;
+  struct GameStatus status;
   if (!get_game_status(&status)) {
     printf("Failed to get game status\n");
   } else {

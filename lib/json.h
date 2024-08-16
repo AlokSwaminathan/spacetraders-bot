@@ -65,7 +65,7 @@
 #define JSON_DOUBLE_COMPARISON_TOLERANCE 1.1
 #define JSON_IS_EXPONENT_START(c) (c == 'e' || c == 'E')
 
-typedef enum JsonDataType {
+enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0
   JSON_TYPE_DOUBLE,     // 1
   JSON_TYPE_STRING,     // 2
@@ -73,14 +73,13 @@ typedef enum JsonDataType {
   JSON_TYPE_ARRAY,      // 4
   JSON_TYPE_NULL,       // 5
   JSON_TYPE_BOOL,       // 6
-} JsonDataType;
+};
 
-typedef struct JsonNode JsonNode;
-typedef struct JsonNode {
-  JsonNode *parent;
-  JsonNode *prev;
-  JsonNode *next;
-  JsonDataType type;
+struct JsonNode {
+  struct JsonNode *parent;
+  struct JsonNode *prev;
+  struct JsonNode *next;
+  enum JsonDataType type;
   // If array or object then their respective number of children
   // If its a string then it is the length of the string
   // Otherwise it is just 1
@@ -88,23 +87,23 @@ typedef struct JsonNode {
   bool is_array_ele;
   char *key;
   union {
-    JsonNode *child;
+    struct JsonNode *child;
     bool value_bool;
     long long value_ll;
     double value_double;
     char *value_str;
     void *value_void;
   };
-} JsonNode;
+};
 
 // Checks if NULL
 // Frees node and all of its children and data (if there are any)
-void free_json(JsonNode *root);
+void free_json(struct JsonNode *root);
 
 // Takes in a full JSON string (null terminated)
 // Returns a pointer to the root JsonNode
 // Returns NULL if any errors occurred
-JsonNode *parse_json(char *json_string);
+struct JsonNode *parse_json(char *json_string);
 
 // Checks if a null terminated string is valid json or not
 bool validate_json(char *json_string);
@@ -113,66 +112,66 @@ bool validate_json(char *json_string);
 // Returns true if the dump was successful
 // If the buffer is too small it will return false
 // Returns false on other failures
-bool json_dump(JsonNode *root, char *buf, int buf_size);
+bool json_dump(struct JsonNode *root, char *buf, int buf_size);
 
 // Takes in a buffer and tries to dump the json to that buffer with pretty printing, will add a null terminator
 // Returns true if the dump was successful
 // If the buffer is too small it will return false
 // Returns false on other failures
-bool json_pretty_print(JsonNode *root, int indent, char *buf, int buf_size);
+bool json_pretty_print(struct JsonNode *root, int indent, char *buf, int buf_size);
 
 // Gets the length of the string from dumping a json node
-int json_dump_str_len(JsonNode *json_node);
+int json_dump_str_len(struct JsonNode *json_node);
 
 // Gets the length of the string from dumping a json node with indentation and pretty printing
 // Newline between all elements in objects and arrays, along with spaces after colons in k,v pairs
 // No trailing new line
-int json_pretty_dump_str_len(JsonNode *json_node, int indent);
+int json_pretty_dump_str_len(struct JsonNode *json_node, int indent);
 
 // Returns node or NULL if key not found
-JsonNode *json_object_get(JsonNode *object, char *key);
+struct JsonNode *json_object_get(struct JsonNode *object, char *key);
 
 // Returns node or NULL if node out of bound
-JsonNode *json_array_get(JsonNode *array, size_t index);
+struct JsonNode *json_array_get(struct JsonNode *array, size_t index);
 
 // Sets node at index to value, doesn't shift other elements
 // Returns old JsonNode if successful
 // Returns NULL if index out of bounds (index >= array->ele_count)
 // Value should be on the heap
-JsonNode *json_array_set(JsonNode *array, size_t index, JsonNode *val);
+struct JsonNode *json_array_set(struct JsonNode *array, size_t index, struct JsonNode *val);
 
 // Sets node at index to value, shifts rest of array to the right including arr[index]
 // Returns true if set was successful
 // Returns false if index out of bounds (will work if index = len(arr))
 // Value should be on the heap
-bool json_array_insert(JsonNode *array, size_t index, JsonNode *val);
+bool json_array_insert(struct JsonNode *array, size_t index, struct JsonNode *val);
 
 // Appends value to the end of a json array
 // Value should be on the heap
-void json_array_append(JsonNode *array, JsonNode *val);
+void json_array_append(struct JsonNode *array, struct JsonNode *val);
 
 // Sets a key, val pair in an object
 // Key and value should be on the heap
 // Returns pointer to previous node with that key, or NULL if the key is new
-JsonNode *json_object_set_key_val_pair(JsonNode *object, char *key, JsonNode *val);
+struct JsonNode *json_object_set_key_val_pair(struct JsonNode *object, char *key, struct JsonNode *val);
 
 // Changes k,v pair in object to have a new key
 // New key should be on the heap
 // Returns true if change worked
 // Returns false if original key didn't exist or if the new key was already taken
-bool json_object_change_key(JsonNode *object, char *original, char *new);
+bool json_object_change_key(struct JsonNode *object, char *original, char *new);
 
 // Changes node to have new value and type
 // If value is double, long long, or bool, doesn't need to be on heap
 // Otherwise value should be on the heap
 // Double values should not be inf or nan
-void json_node_set_value(JsonNode *json_node, JsonDataType type, void *value);
+void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, void *value);
 
 // Returns new json node with provided type and value
 // If value is double, long long, or bool, doesn't need to be on heap
 // Otherwise value should be on the heap
 // Returns null if malloc fails
 // Double values should not be inf or nan
-JsonNode *json_new_node(JsonDataType type, void *value);
+struct JsonNode *json_new_node(enum JsonDataType type, void *value);
 
 #endif

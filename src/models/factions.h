@@ -3,13 +3,13 @@
 
 #include "util.h"
 
-typedef struct Faction {
+struct Faction {
   char* symbol;
   char* name;
   char* desc;
   char* headquarters;
   ARRAY_STRUCT(Trait, traits);
   bool is_recruiting;
-} Faction;
+};
 
 #endif

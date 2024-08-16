@@ -6,7 +6,7 @@
 #include "util.h"
 #include "../parsers.h"
 
-bool get_game_status(GameStatus* status) {
+bool get_game_status(struct GameStatus* status) {
   curl_easy_setopt(curl_hnd, CURLOPT_CUSTOMREQUEST, "GET");
   curl_easy_setopt(curl_hnd, CURLOPT_URL, "https://api.spacetraders.io/v2/");
 
@@ -14,7 +14,7 @@ bool get_game_status(GameStatus* status) {
 
   if (res != CURLE_OK) return false;
 
-  JsonNode* status_json = parse_json(curl_response.data);
+  struct JsonNode* status_json = parse_json(curl_response.data);
   curl_response.size = 0;
 
   if (status_json == NULL) return false;
@@ -24,7 +24,7 @@ bool get_game_status(GameStatus* status) {
   return true;
 }
 
-void print_game_status(GameStatus *status){
+void print_game_status(struct GameStatus *status){
   if (status == NULL) return;
 
   printf("Spacetraders Game Status\n");

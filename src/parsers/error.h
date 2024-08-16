@@ -4,8 +4,8 @@
 #include "../models.h"
 #include "json.h"
 
-bool parse_error_response(JsonNode *root, ErrorResponse *error);
+bool parse_error_response(struct JsonNode *root, struct ErrorResponse *error);
 
-void free_error_response(ErrorResponse *error);
+void free_error_response(struct ErrorResponse *error);
 
 #endif

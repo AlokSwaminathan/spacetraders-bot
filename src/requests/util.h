@@ -15,8 +15,8 @@ struct CurlResponse{
 };
 
 struct CurlJsonResponse{
-  JsonNode *root;
-  ErrorResponse *error;
+  struct JsonNode *root;
+  struct ErrorResponse *error;
 } CurlJsonResponse;
 
 extern struct CurlResponse curl_response;
@@ -30,7 +30,7 @@ size_t curl_response_to_json(char* data, size_t size, size_t nmemb, void* client
 struct CurlJsonResponse curl_get_json(CURL *hnd);
 
 // Handles a CurlJsonResponse and exits the program if it fails, returning the valid json node only if there is no error
-JsonNode* handle_curl_error(struct CurlJsonResponse resp);
+struct JsonNode* handle_curl_error(struct CurlJsonResponse resp);
 
 #define curl_get_valid_json(hnd) handle_curl_error(curl_get_json(hnd))
 

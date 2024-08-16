@@ -16,13 +16,20 @@ size_t curl_response_to_json(char* data, size_t size, size_t nmemb, void* client
   return realsize;
 }
 
-struct CurlJsonResponse curl_get_json(CURL* hnd) {
+struct CurlJsonResponse curl_get_json(char* method, char* url, char* postfields) {
   struct CurlJsonResponse resp;
   resp.error = calloc(1, sizeof(*resp.error));
   MALLOC_CHECK(resp.error);
   resp.root = NULL;
 
-  CURLcode ret = curl_easy_perform(hnd);
+  // Set up CURL request
+  curl_easy_setopt(curl_hnd,CURLOPT_CUSTOMREQUEST,method);
+  curl_easy_setopt(curl_hnd,CURLOPT_URL,url);
+  if (postfields != NULL){
+    curl_easy_setopt(curl_hnd,CURLOPT_POSTFIELDS,postfields);
+  }
+
+  CURLcode ret = curl_easy_perform(curl_hnd);
 
   if (ret != CURLE_OK) {
     resp.error->msg = "CURL failed to perform request";

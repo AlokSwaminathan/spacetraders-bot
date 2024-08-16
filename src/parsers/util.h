@@ -51,9 +51,11 @@
     (array_struct).start = malloc(sizeof(*((array_struct).start)) * (array_struct).len); \
     if ((array_struct).start == NULL && (array_struct).len != 0) return false;           \
     JsonNode* curr = (array)->child;                                                     \
-    for (int i = 0; curr != NULL; curr = curr->next, i++) {                              \
-      code                                                                               \
+    for (int i = 0; curr != NULL && (array)->ele_count != 0; curr = curr->next, i++) {   \
+      code;                                                                               \
     }                                                                                    \
   }
+
+#define JSON_OBJECT_MAP(object, array_struct, code) JSON_ARRAY_MAP(object, array_struct, code);
 
 #endif

@@ -59,4 +59,12 @@ typedef struct GameStatus {
   ARRAY_STRUCT({char* name; char* url; }, links);
 } GameStatus;
 
+typedef struct ErrorResponse {
+  JsonNode* root;
+  char* msg;
+  int code;
+  bool is_curl_failure;
+  ARRAY_STRUCT({ char* key; char* msg; }, data);
+} ErrorResponse;
+
 #endif

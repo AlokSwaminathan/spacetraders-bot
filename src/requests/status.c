@@ -4,7 +4,7 @@
 
 #include "json.h"
 #include "util.h"
-#include "../parsers/parsers.h"
+#include "../parsers.h"
 
 bool get_game_status(GameStatus* status) {
   curl_easy_setopt(curl_hnd, CURLOPT_CUSTOMREQUEST, "GET");

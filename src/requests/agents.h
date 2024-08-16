@@ -1,9 +1,10 @@
 #ifndef SPACETRADERS_REQUEST_AGENTS
 #define SPACETRADERS_REQUEST_AGENTS
 
-// Returns token string
-char* register_agent(char* username);
+// Returns null-terminated token string
+char* register_agent(char* agent_symbol, char* faction, char* email);
 
-char* get_username(char* token);
+// Returns null-terminated agent symbol
+char* get_agent_data(char* token);
 
 #endif

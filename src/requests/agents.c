@@ -1,9 +1,7 @@
 #include "agents.h"
 
-char* register_agent(char* username){
-
+char* register_agent(char* agent_symbol, char* faction, char* email) {
 }
 
-char* get_username(char* token){
-
+char* get_agent_data(char* token) {
 }

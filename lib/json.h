@@ -65,6 +65,14 @@
 #define JSON_DOUBLE_COMPARISON_TOLERANCE 1.1
 #define JSON_IS_EXPONENT_START(c) (c == 'e' || c == 'E')
 
+#define JSON_MALLOC_CHECK(ptr)                                \
+  {                                                           \
+    if (ptr == NULL) {                                        \
+      fprintf(stderr, "Malloc failure, exitting program..."); \
+      exit(1);                                                \
+    }                                                         \
+  }
+
 enum JsonDataType {
   JSON_TYPE_LONG_LONG,  // 0
   JSON_TYPE_DOUBLE,     // 1
@@ -102,7 +110,7 @@ void free_json(struct JsonNode *root);
 
 // Takes in a full JSON string (null terminated)
 // Returns a pointer to the root JsonNode
-// Returns NULL if any errors occurred
+// Returns NULL if the parsing failed (invalid json)
 struct JsonNode *parse_json(char *json_string);
 
 // Checks if a null terminated string is valid json or not
@@ -137,40 +145,34 @@ struct JsonNode *json_array_get(struct JsonNode *array, size_t index);
 // Sets node at index to value, doesn't shift other elements
 // Returns old JsonNode if successful
 // Returns NULL if index out of bounds (index >= array->ele_count)
-// Value should be on the heap
 struct JsonNode *json_array_set(struct JsonNode *array, size_t index, struct JsonNode *val);
 
 // Sets node at index to value, shifts rest of array to the right including arr[index]
 // Returns true if set was successful
 // Returns false if index out of bounds (will work if index = len(arr))
-// Value should be on the heap
 bool json_array_insert(struct JsonNode *array, size_t index, struct JsonNode *val);
 
 // Appends value to the end of a json array
-// Value should be on the heap
 void json_array_append(struct JsonNode *array, struct JsonNode *val);
 
 // Sets a key, val pair in an object
-// Key and value should be on the heap
+// Clones key
 // Returns pointer to previous node with that key, or NULL if the key is new
-struct JsonNode *json_object_set_key_val_pair(struct JsonNode *object, char *key, struct JsonNode *val);
+struct JsonNode *json_object_set_kv(struct JsonNode *object, char *key, struct JsonNode *val);
 
 // Changes k,v pair in object to have a new key
-// New key should be on the heap
+// Clones key
 // Returns true if change worked
 // Returns false if original key didn't exist or if the new key was already taken
 bool json_object_change_key(struct JsonNode *object, char *original, char *new);
 
 // Changes node to have new value and type
-// If value is double, long long, or bool, doesn't need to be on heap
-// Otherwise value should be on the heap
+// Clones value if it's a string
 // Double values should not be inf or nan
 void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, void *value);
 
 // Returns new json node with provided type and value
-// If value is double, long long, or bool, doesn't need to be on heap
-// Otherwise value should be on the heap
-// Returns null if malloc fails
+// This is the only way that JsonNodes should be made
 // Double values should not be inf or nan
 struct JsonNode *json_new_node(enum JsonDataType type, void *value);
 

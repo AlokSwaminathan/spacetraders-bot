@@ -26,6 +26,8 @@ static char *json_dump_node(struct JsonNode *json_node, char *buf, int indent, i
 
 static int json_node_str_len(struct JsonNode *json_node, int indent, int layer);
 
+static void *json_copy_data(void *data, size_t size);
+
 static char JSON_NULL_STR[] = {'n', 'u', 'l', 'l'};
 static char JSON_TRUE_STR[] = {'t', 'r', 'u', 'e'};
 static char JSON_FALSE_STR[] = {'f', 'a', 'l', 's', 'e'};
@@ -53,7 +55,6 @@ struct JsonNode *parse_json(char *json_string) {
   if (json_string == NULL) return NULL;
 
   struct JsonNode *root = json_node_default();
-  if (root == NULL) return NULL;
 
   JSON_STRING_READ_WHITESPACE(json_string);
 
@@ -260,6 +261,7 @@ static char *json_parse_string(char *json_string, struct JsonNode *json_node) {
 
   // Actually parse the string
   char *str = malloc(sizeof(char) * (len + 1));
+  JSON_MALLOC_CHECK(str);
   for (int i = 0; i < len; i++, json_string++) {
     char c = *json_string;
     if (c == JSON_SPECIAL_START) {
@@ -439,7 +441,7 @@ static char *json_parse_literal(char *json_string, struct JsonNode *json_node) {
 
 static struct JsonNode *json_node_default(void) {
   struct JsonNode *node = (struct JsonNode *)malloc(sizeof(struct JsonNode));
-  if (node == NULL) return NULL;
+  JSON_MALLOC_CHECK(node);
   node->parent = NULL;
   node->prev = NULL;
   node->next = NULL;
@@ -774,7 +776,9 @@ void json_array_append(struct JsonNode *array, struct JsonNode *val) {
   last->next = val;
 }
 
-struct JsonNode *json_object_set_key_val_pair(struct JsonNode *object, char *key, struct JsonNode *val) {
+struct JsonNode *json_object_set_kv(struct JsonNode *object, char *key, struct JsonNode *val) {
+  key = (char *)json_copy_data(key, strlen(key));
+
   if (object->type != JSON_TYPE_OBJECT) return NULL;
   struct JsonNode *old_val = json_object_get(object, key);
   val->key = key;
@@ -797,6 +801,7 @@ struct JsonNode *json_object_set_key_val_pair(struct JsonNode *object, char *key
 }
 
 bool json_object_change_key(struct JsonNode *object, char *original, char *new) {
+  new = (char *)json_copy_data(new, strlen(new));
   if (object->type != JSON_TYPE_OBJECT) return false;
   struct JsonNode *old_val = json_object_get(object, original);
   if (original == NULL || json_object_get(object, new)) return false;
@@ -834,6 +839,7 @@ void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, voi
       json_node->value_void = NULL;
       break;
     case JSON_TYPE_STRING:
+      value = json_copy_data(value, strlen((const char *)value));
       json_node->value_str = (char *)value;
       json_node->ele_count = strlen(json_node->value_str);
       break;
@@ -842,7 +848,13 @@ void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, voi
 
 struct JsonNode *json_new_node(enum JsonDataType type, void *value) {
   struct JsonNode *node = json_node_default();
-  if (node == NULL) return NULL;
   json_node_set_value(node, type, value);
   return node;
+}
+
+void *json_copy_data(void *data, size_t size) {
+  void *ret = malloc(size);
+  JSON_MALLOC_CHECK(ret);
+  memcpy(ret, data, size);
+  return ret;
 }

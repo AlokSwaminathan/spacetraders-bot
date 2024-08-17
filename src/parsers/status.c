@@ -11,8 +11,6 @@ static bool parse_game_status_stats(struct JsonNode *root, struct GameStatusStat
 }
 
 bool parse_game_status(struct JsonNode *root, struct GameStatus *status) {
-  status->root = root;
-
   JSON_OBJECT_GET_SET(root, "status", status->status, JSON_TYPE_STRING);
 
   JSON_OBJECT_GET_SET(root, "version", status->ver, JSON_TYPE_STRING);
@@ -68,4 +66,27 @@ bool parse_game_status(struct JsonNode *root, struct GameStatus *status) {
   });
 
   return true;
+}
+
+void free_game_status(struct GameStatus *status) {
+  free(status->status);
+  free(status->ver);
+  free(status->reset_date);
+  free(status->description);
+  ARRAY_STRUCT_FREE(status->most_credits, {
+    free(status->most_credits.start[i].agent_symbol);
+  });
+  ARRAY_STRUCT_FREE(status->most_charts, {
+    free(status->most_charts.start[i].agent_symbol);
+  });
+  free(status->next_reset);
+  free(status->reset_freq);
+  ARRAY_STRUCT_FREE(status->announcements,{
+    free(status->announcements.start[i].title);
+    free(status->announcements.start[i].body);
+  });
+  ARRAY_STRUCT_FREE(status->links,{
+    free(status->links.start[i].name);
+    free(status->links.start[i].url);
+  });
 }

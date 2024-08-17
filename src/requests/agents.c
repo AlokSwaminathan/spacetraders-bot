@@ -24,6 +24,7 @@ char* register_agent(char* agent_symbol, char* faction, char* email) {
   struct JsonNode* agent_info = curl_get_valid_json("POST", "https://api.spacetraders.io/v2/register", postfields);
 
   char* token = parse_token_new_agent(agent_info);
+  MALLOC_CHECK(token);
 
   free_json(agent_info);
   free_json(root);
@@ -39,6 +40,12 @@ char* get_agent_data(void) {
     fprintf(stderr, "Failed to parse agent data to get symbol\n");
     exit(1);
   }
+  free_json(root);
 
-  return agent.symbol;
+  char* symbol = strdup(agent.symbol);
+  MALLOC_CHECK(symbol);
+
+  free_agent_details(&agent);
+
+  return symbol;
 }

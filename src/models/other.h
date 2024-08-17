@@ -45,7 +45,6 @@ struct GameStatusStats {
 };
 
 struct GameStatus {
-  struct JsonNode* root;
   char* status;
   char* ver;
   char* reset_date;
@@ -60,7 +59,6 @@ struct GameStatus {
 };
 
 struct ErrorResponse {
-  struct JsonNode* root;
   char* msg;
   int code;
   bool is_curl_failure;

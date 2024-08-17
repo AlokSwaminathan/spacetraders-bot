@@ -2,10 +2,10 @@
 #define SPACETRADERS_CLI
 
 struct CliArgs {
-  char* token;
-  char* symbol;
-  char* faction;
-  char* email;
+  char token[1024];
+  char symbol[1024];
+  char faction[1024];
+  char email[1024];
 };
 
 #endif

@@ -8,4 +8,6 @@
 // Returns true if successful, false if failed
 bool parse_game_status(struct JsonNode *root, struct GameStatus *status);
 
+void free_game_status(struct GameStatus *status);
+
 #endif

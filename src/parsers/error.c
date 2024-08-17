@@ -1,11 +1,9 @@
 #include "error.h"
 
-#include "util.h"
 #include "../util.h"
+#include "util.h"
 
 bool parse_error_response(struct JsonNode *root, struct ErrorResponse *error) {
-  error->root = root;
-
   JSON_OBJECT_GET_SET(root, "error", root, JSON_TYPE_OBJECT);
 
   JSON_OBJECT_GET_SET(root, "message", error->msg, JSON_TYPE_STRING);
@@ -44,9 +42,12 @@ bool parse_error_response(struct JsonNode *root, struct ErrorResponse *error) {
 }
 
 void free_error_response(struct ErrorResponse *error) {
-  free_json(error->root);
+  free(error->msg);
   if (error->data.start == NULL) return;
   for (size_t i = 0; i < error->data.len; i++) {
+    for (size_t j = 0; j < error->data.start[i].msgs_len; j++){
+      free(error->data.start[i].msgs[j]);
+    }
     free(error->data.start[i].msgs);
   }
   free(error->data.start);

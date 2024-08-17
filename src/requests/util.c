@@ -23,13 +23,14 @@ struct CurlJsonResponse curl_get_json(char* method, char* url, char* postfields)
   resp.root = NULL;
 
   // Set up CURL request
-  curl_easy_setopt(curl_hnd,CURLOPT_CUSTOMREQUEST,method);
-  curl_easy_setopt(curl_hnd,CURLOPT_URL,url);
-  if (postfields != NULL){
-    curl_easy_setopt(curl_hnd,CURLOPT_POSTFIELDS,postfields);
+  curl_easy_setopt(curl_hnd, CURLOPT_CUSTOMREQUEST, method);
+  curl_easy_setopt(curl_hnd, CURLOPT_URL, url);
+  if (postfields != NULL) {
+    curl_easy_setopt(curl_hnd, CURLOPT_POSTFIELDS, postfields);
   }
 
   CURLcode ret = curl_easy_perform(curl_hnd);
+  curl_response.size = 0;
 
   if (ret != CURLE_OK) {
     resp.error->msg = "CURL failed to perform request";
@@ -69,10 +70,16 @@ struct JsonNode* handle_curl_error(struct CurlJsonResponse resp) {
   fprintf(stderr, "Error code: %d\n", resp.error->code);
   fprintf(stderr, "Error data\n");
   for (size_t i = 0; i < resp.error->data.len; i++) {
-    fprintf(stderr, "JSON Key: %s, Error: %s\n", resp.error->data.start[i].key, resp.error->data.start[i].msg);
+    fprintf(stderr, "JSON Key: %s, Error:", resp.error->data.start[i].key);
+    for (size_t j = 0; j < resp.error->data.start[i].msgs_len; j++) {
+      fprintf(stderr, " %s", resp.error->data.start[i].msgs[j]);
+    }
+    fprintf(stderr, "\n");
   }
 
   free_error_response(resp.error);
 
   handle_exit(0);
+
+  return NULL;
 }

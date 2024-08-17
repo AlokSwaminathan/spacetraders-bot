@@ -64,7 +64,7 @@ struct ErrorResponse {
   char* msg;
   int code;
   bool is_curl_failure;
-  ARRAY_STRUCT({ char* key; char* msg; }, data);
+  ARRAY_STRUCT({ char* key; char** msgs; size_t msgs_len; }, data);
 };
 
 #endif

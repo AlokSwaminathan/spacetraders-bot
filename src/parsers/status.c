@@ -48,7 +48,7 @@ bool parse_game_status(struct JsonNode *root, struct GameStatus *status) {
 
   JSON_ARRAY_MAP(most_charts, status->most_charts, {
     JSON_OBJECT_GET_SET(curr, "agentSymbol", status->most_charts.start[i].agent_symbol, JSON_TYPE_STRING);
-    JSON_OBJECT_GET_SET(curr, "credits", status->most_charts.start[i].chart_count, JSON_TYPE_LONG_LONG);
+    JSON_OBJECT_GET_SET(curr, "chartCount", status->most_charts.start[i].chart_count, JSON_TYPE_LONG_LONG);
   });
 
   struct JsonNode *announcements;

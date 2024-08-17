@@ -5,13 +5,14 @@
 
 #define MALLOC_ERROR()                                              \
   {                                                                 \
-    fprintf(stderr, "Failed to malloc somewhere somethings wrong"); \
+    fprintf(stderr, "Failed to malloc, exiting program..."); \
     exit(1);                                                        \
   }
 
 #define MALLOC_CHECK(ptr) \
   {                       \
-    if (ptr == NULL) {    \
+    void* _ptr = ptr;     \
+    if (_ptr == NULL) {    \
       MALLOC_ERROR();     \
     }                     \
   };

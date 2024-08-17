@@ -3,14 +3,10 @@
 #include <curl/curl.h>
 #include <stdlib.h>
 
-extern char* agent_symbol;
-extern char* token;
 extern CURL* curl_hnd;
 
 void handle_exit(int signum __attribute__((unused))) {
-  printf("Exiting program...\n");
+  printf("\nExiting program...\n");
   curl_easy_cleanup(curl_hnd);
-  free(agent_symbol);
-  free(token);
   exit(0);
 }

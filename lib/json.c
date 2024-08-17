@@ -704,11 +704,11 @@ static int json_str_escaped_len(char *str) {
 }
 
 int json_dump_str_len(struct JsonNode *root) {
-  return json_node_str_len(root, INT32_MIN, 0);
+  return json_node_str_len(root, INT32_MIN, 0) + 1;
 }
 
-int json_pretty_dump_str_len(struct JsonNode *root, int indent) {
-  return json_node_str_len(root, indent, 0);
+int json_pretty_print_str_len(struct JsonNode *root, int indent) {
+  return json_node_str_len(root, indent, 0) + 1;
 }
 
 // Helper functions
@@ -752,6 +752,7 @@ bool json_array_insert(struct JsonNode *array, size_t index, struct JsonNode *va
     json_array_append(array, val);
     return true;
   }
+  array->ele_count++;
   if (index == 0) array->child = val;
   struct JsonNode *next = json_array_get(array, index);
   val->parent = array;
@@ -765,6 +766,7 @@ bool json_array_insert(struct JsonNode *array, size_t index, struct JsonNode *va
 
 void json_array_append(struct JsonNode *array, struct JsonNode *val) {
   struct JsonNode *last = json_array_get(array, array->ele_count - 1);
+  array->ele_count++;
   val->next = NULL;
   val->parent = array;
   val->prev = last;
@@ -791,6 +793,7 @@ struct JsonNode *json_object_set_kv(struct JsonNode *object, char *key, struct J
     if (object->child == old_val) object->child = val;
     return old_val;
   } else {
+    object->ele_count++;
     struct JsonNode *old_child = object->child;
     if (old_child != NULL) old_child->prev = val;
     val->next = old_child;
@@ -839,7 +842,7 @@ void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, voi
       json_node->value_void = NULL;
       break;
     case JSON_TYPE_STRING:
-      value = json_copy_data(value, strlen((const char *)value));
+      value = json_copy_data(value, strlen((const char *)value)+1);
       json_node->value_str = (char *)value;
       json_node->ele_count = strlen(json_node->value_str);
       break;

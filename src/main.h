@@ -6,5 +6,6 @@
 #include "models.h"
 #include "requests.h"
 #include "util.h"
+#include "cli.h"
 
 #endif

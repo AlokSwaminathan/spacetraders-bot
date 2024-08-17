@@ -5,6 +5,6 @@
 char* register_agent(char* agent_symbol, char* faction, char* email);
 
 // Returns null-terminated agent symbol
-char* get_agent_data(char* token);
+char* get_agent_data(void);
 
 #endif

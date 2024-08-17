@@ -129,12 +129,14 @@ bool json_dump(struct JsonNode *root, char *buf, int buf_size);
 bool json_pretty_print(struct JsonNode *root, int indent, char *buf, int buf_size);
 
 // Gets the length of the string from dumping a json node
+// Includes null terminator
 int json_dump_str_len(struct JsonNode *json_node);
 
 // Gets the length of the string from dumping a json node with indentation and pretty printing
 // Newline between all elements in objects and arrays, along with spaces after colons in k,v pairs
 // No trailing new line
-int json_pretty_dump_str_len(struct JsonNode *json_node, int indent);
+// Includes null terminator
+int json_pretty_print_str_len(struct JsonNode *json_node, int indent);
 
 // Returns node or NULL if key not found
 struct JsonNode *json_object_get(struct JsonNode *object, char *key);

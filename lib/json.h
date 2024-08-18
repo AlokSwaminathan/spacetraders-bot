@@ -83,6 +83,14 @@ enum JsonDataType {
   JSON_TYPE_BOOL,       // 6
 };
 
+#define JSON_TYPE_LONG_LONG_STR "LONG_LONG"
+#define JSON_TYPE_DOUBLE_STR "DOUBLE"
+#define JSON_TYPE_STRING_STR "STRING"
+#define JSON_TYPE_OBJECT_STR "OBJECT"
+#define JSON_TYPE_ARRAY_STR "ARRAY"
+#define JSON_TYPE_NULL_STR "NULL"
+#define JSON_TYPE_BOOL_STR "BOOL"
+
 struct JsonNode {
   struct JsonNode *parent;
   struct JsonNode *prev;
@@ -177,5 +185,8 @@ void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, voi
 // This is the only way that JsonNodes should be made
 // Double values should not be inf or nan
 struct JsonNode *json_new_node(enum JsonDataType type, void *value);
+
+// Returns string representation of data type
+const char* json_type_as_str(enum JsonDataType type);
 
 #endif

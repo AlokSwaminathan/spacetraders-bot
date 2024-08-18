@@ -842,7 +842,7 @@ void json_node_set_value(struct JsonNode *json_node, enum JsonDataType type, voi
       json_node->value_void = NULL;
       break;
     case JSON_TYPE_STRING:
-      value = json_copy_data(value, strlen((const char *)value)+1);
+      value = json_copy_data(value, strlen((const char *)value) + 1);
       json_node->value_str = (char *)value;
       json_node->ele_count = strlen(json_node->value_str);
       break;
@@ -860,4 +860,31 @@ void *json_copy_data(void *data, size_t size) {
   JSON_MALLOC_CHECK(ret);
   memcpy(ret, data, size);
   return ret;
+}
+
+const char *json_type_as_str(enum JsonDataType type) {
+  switch (type) {
+    case JSON_TYPE_ARRAY:
+      return JSON_TYPE_ARRAY_STR;
+      break;
+    case JSON_TYPE_BOOL:
+      return JSON_TYPE_BOOL_STR;
+      break;
+    case JSON_TYPE_DOUBLE:
+      return JSON_TYPE_DOUBLE_STR;
+      break;
+    case JSON_TYPE_STRING:
+      return JSON_TYPE_STRING_STR;
+      break;
+    case JSON_TYPE_OBJECT:
+      return JSON_TYPE_OBJECT_STR;
+      break;
+    case JSON_TYPE_NULL:
+      return JSON_TYPE_NULL_STR;
+      break;
+    case JSON_TYPE_LONG_LONG:
+      return JSON_TYPE_LONG_LONG_STR;
+      break;
+  };
+  return NULL;
 }

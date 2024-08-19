@@ -733,6 +733,16 @@ struct JsonNode *json_array_get(struct JsonNode *array, size_t index) {
   return curr;
 }
 
+int json_array_index_get(struct JsonNode *ele){
+  if (ele->is_array_ele != true) return -1;
+  int index = 0;
+  while (ele != NULL){
+    ele = ele->next;
+    index++;
+  }
+  return index-1;
+}
+
 struct JsonNode *json_array_set(struct JsonNode *array, size_t index, struct JsonNode *val) {
   if (index >= array->ele_count) return NULL;
   struct JsonNode *curr = json_array_get(array, index);

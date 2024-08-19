@@ -152,6 +152,9 @@ struct JsonNode *json_object_get(struct JsonNode *object, char *key);
 // Returns node or NULL if node out of bound
 struct JsonNode *json_array_get(struct JsonNode *array, size_t index);
 
+// Returns index or -1 if value is not an array element
+int json_array_index_get(struct JsonNode *ele);
+
 // Sets node at index to value, doesn't shift other elements
 // Returns old JsonNode if successful
 // Returns NULL if index out of bounds (index >= array->ele_count)

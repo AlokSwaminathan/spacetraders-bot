@@ -4,11 +4,20 @@
 #include "other.h"
 #include "util.h"
 
+#define SHIP_STATUS_IN_TRANSIT_STR "IN_TRANSIT"
+#define SHIP_STATUS_IN_ORBIT_STR "IN_ORBIT"
+#define SHIP_STATUS_DOCKED_STR "DOCKED"
+
 enum ShipStatus {
   SHIP_STATUS_IN_TRANSIT,
   SHIP_STATUS_IN_ORBIT,
   SHIP_STATUS_DOCKED,
 };
+
+#define SHIP_FLIGHT_MODE_BURN_STR "BURN"
+#define SHIP_FLIGHT_MODE_STEALTH_STR "STEALTH"
+#define SHIP_FLIGHT_MODE_DRIFT_STR "DRIFT"
+#define SHIP_FLIGHT_MODE_CRUISE_STR "CRUISE"
 
 enum ShipFlightMode {
   SHIP_FLIGHT_MODE_CRUISE,
@@ -16,6 +25,9 @@ enum ShipFlightMode {
   SHIP_FLIGHT_MODE_STEALTH,
   SHIP_FLIGHT_MODE_BURN,
 };
+
+#define SHIP_CREW_ROTATION_STRICT_STR "STRICT"
+#define SHIP_CREW_ROTATION_RELAXED_STR "RELAXED"
 
 enum ShipCrewRotation {
   SHIP_CREW_ROTATION_STRICT,
@@ -31,21 +43,22 @@ struct ShipCrew {
   int wages;
 };
 
-struct ShipInstallReqs {
+struct ShipInstallReq {
   int power;
   int crew;
   int slots;
 };
 
 struct ShipFrame {
-  char* frame_symbol;
+  char* symbol;
   char* name;
   char* desc;
   double condition;
   double integrity;
+  int module_slots;
   int mounting_points;
   int fuel_capacity;
-  struct ShipInstallReqs reqs;
+  struct ShipInstallReq reqs;
 };
 
 struct ShipReactor {
@@ -55,7 +68,7 @@ struct ShipReactor {
   double condition;
   double integrity;
   int power_output;
-  struct ShipInstallReqs reqs;
+  struct ShipInstallReq reqs;
 };
 
 struct ShipEngine {
@@ -65,10 +78,10 @@ struct ShipEngine {
   double condition;
   double integrity;
   int speed;
-  struct ShipInstallReqs reqs;
+  struct ShipInstallReq reqs;
 };
 
-struct ShipCoolDown {
+struct ShipCooldown {
   char* ship_symbol;
   int total_sec;
   int remaining_sec;
@@ -81,7 +94,7 @@ struct ShipModule {
   int range;
   char* name;
   char* desc;
-  struct ShipInstallReqs reqs;
+  struct ShipInstallReq reqs;
 };
 
 struct ShipMount {
@@ -89,9 +102,8 @@ struct ShipMount {
   char* name;
   char* desc;
   int strength;
-  char** deposits;
-  size_t deposits_len;
-  struct ShipInstallReqs reqs;
+  ARRAY_STRUCT({ char* good; }, deposits);
+  struct ShipInstallReq reqs;
 };
 
 struct ShipCargoItem {
@@ -158,7 +170,11 @@ struct Ship {
   char* symbol;
   struct ShipRegistration registration;
   struct ShipNavigation nav;
-  struct ShipCoolDown cooldown;
+  struct ShipCrew crew;
+  struct ShipFrame frame;
+  struct ShipReactor reactor;
+  struct ShipEngine engine;
+  struct ShipCooldown cooldown;
   ARRAY_STRUCT(ShipModule, modules);
   ARRAY_STRUCT(ShipMount, mounts);
   struct ShipCargo cargo;

@@ -130,7 +130,7 @@ static void parse_args(int argc, char** argv) {
 static struct curl_slist* curl_init() {
   curl_hnd = curl_easy_init();
   if (curl_hnd == NULL) {
-    printf("Curl didn't init right\n");
+    fprintf(stderr, "Curl didn't init right\n");
     exit(1);
   }
 

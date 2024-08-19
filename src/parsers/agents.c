@@ -4,25 +4,12 @@
 #include <string.h>
 
 #include "util.h"
-
-char* parse_token_new_agent(struct JsonNode* root) {
-  struct JsonNode* data;
-  JSON_OBJECT_GET_SET(root, "data", data, JSON_TYPE_OBJECT);
-
-  char* token;
-  JSON_OBJECT_GET_SET(data, "token", token, JSON_TYPE_STRING);
-
-  if (token == NULL) {
-    fprintf(stderr, "Failed to get token from new agent's data\n");
-  }
-
-  return strdup(token);
-}
+#include "ships.h"
+#include "contracts.h"
+#include "factions.h"
 
 bool parse_agent_details(struct JsonNode* root, struct Agent* agent) {
-  JSON_OBJECT_GET_SET(root, "data", root, JSON_TYPE_OBJECT);
-
-  JSON_OBJECT_GET_SET(root, "accountId", agent->account_id, JSON_TYPE_STRING);
+  JSON_OBJECT_GET_SET_NOT_REQ(root, "accountId", agent->account_id, JSON_TYPE_STRING,NULL);
 
   JSON_OBJECT_GET_SET(root, "symbol", agent->symbol, JSON_TYPE_STRING);
 
@@ -42,4 +29,35 @@ void free_agent_details(struct Agent* agent) {
   free(agent->symbol);
   free(agent->headquarters);
   free(agent->starting_faction);
+}
+
+bool parse_new_agent(struct JsonNode *root, struct NewAgentData *agent){
+
+  JSON_OBJECT_GET_SET(root,"token",agent->token,JSON_TYPE_STRING);
+
+  struct JsonNode *agent_details;
+  JSON_OBJECT_GET_SET(root,"agent",agent_details,JSON_TYPE_OBJECT);
+  if (!parse_agent_details(agent_details,&(agent->agent))) return false;
+
+  struct JsonNode *contract;
+  JSON_OBJECT_GET_SET(root,"contract",contract,JSON_TYPE_OBJECT);
+  if (!parse_contract(contract,&(agent->starting_contract))) return false;
+
+  struct JsonNode *faction;
+  JSON_OBJECT_GET_SET(root,"faction",faction,JSON_TYPE_OBJECT);
+  if (!parse_faction(faction,&(agent->faction))) return false;
+
+  struct JsonNode *ship;
+  JSON_OBJECT_GET_SET(root,"ship",ship,JSON_TYPE_OBJECT);
+  if (!parse_ship(ship,&(agent->ship))) return false;
+
+  return true;
+}
+
+void free_new_agent(struct NewAgentData *agent){
+  free(agent->token);
+  free_contract(&(agent->starting_contract));
+  free_faction(&(agent->faction));
+  free_agent_details(&(agent->agent));
+  free_ship(&(agent->ship));
 }

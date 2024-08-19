@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := all
 
 CC := gcc
-CFLAGS := -Wall -Wextra -g 
+CFLAGS := -Wall -Wextra -g
 LFLAGS := -lcurl
 
 SRCDIR := src

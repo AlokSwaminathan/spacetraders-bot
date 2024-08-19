@@ -17,11 +17,13 @@ struct CurlResponse{
 struct CurlJsonResponse{
   struct JsonNode *root;
   struct ErrorResponse *error;
-} CurlJsonResponse;
+};
 
 extern struct CurlResponse curl_response;
 
 extern CURL *curl_hnd;
+
+extern const char* g_error_json_name;
 
 size_t curl_response_to_json(char* data, size_t size, size_t nmemb, void* clientp);
 

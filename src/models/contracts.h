@@ -9,6 +9,10 @@ enum ContractType {
   CONTRACT_SHUTTLE,
 };
 
+#define CONTRACT_PROCUREMENT_STRING "PROCUREMENT"
+#define CONTRACT_TRANSPORT_STRING "TRANSPORT"
+#define CONTRACT_SHUTTLE_STRING "SHUTTLE"
+
 struct ContractDeliverGood {
   char* trade_symbol;
   char* dest_symbol;

@@ -6,6 +6,4 @@
 
 bool get_game_status(struct GameStatus *status);
 
-void print_game_status(struct GameStatus *status);
-
 #endif

@@ -1,7 +1,42 @@
-#include "util.h"
+#include "curl.h"
 
-#include "../parsers.h"
-#include "../util.h"
+#include "models.h"
+#include "constants.h"
+#include "parsers.h"
+
+extern struct CurlResponse curl_response;
+
+extern CURL* curl_hnd;
+
+struct curl_slist* curl_init(CURL** hnd) {
+  *hnd = curl_easy_init();
+  if (*hnd == NULL) {
+    fprintf(stderr, "Curl didn't init right\n");
+    exit(1);
+  }
+
+  struct curl_slist* curl_headers = NULL;
+
+  curl_headers = curl_slist_append(curl_headers, "Content-Type: application/json");
+  curl_headers = curl_slist_append(curl_headers, "Accept: application/json");
+
+  curl_easy_setopt(*hnd, CURLOPT_HTTPHEADER, curl_headers);
+
+  curl_easy_setopt(*hnd, CURLOPT_WRITEFUNCTION, curl_response_to_json);
+  curl_easy_setopt(*hnd, CURLOPT_WRITEDATA, (void*)&curl_response);
+
+  return curl_headers;
+}
+
+void curl_add_auth(CURL* hnd, struct curl_slist* curl_headers, char* token) {
+  // Add bearer auth token
+  char header_token[BEARER_TOKEN_START_LEN + strlen(token) + 1];
+  memcpy(header_token, BEARER_TOKEN_START, BEARER_TOKEN_START_LEN);
+  memcpy(header_token + BEARER_TOKEN_START_LEN, token, strlen(token) + 1);
+  curl_headers = curl_slist_append(curl_headers, (const char*)header_token);
+
+  curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, curl_headers);
+}
 
 size_t curl_response_to_json(char* data, size_t size, size_t nmemb, void* clientp) {
   size_t realsize = size * nmemb;
@@ -19,6 +54,7 @@ size_t curl_response_to_json(char* data, size_t size, size_t nmemb, void* client
 struct CurlJsonResponse curl_get_json(char* method, char* url, char* postfields) {
   struct CurlJsonResponse resp;
   resp.error = calloc(1, sizeof(*resp.error));
+  memset(resp.error,0,sizeof(*resp.error));
   MALLOC_CHECK(resp.error);
   resp.root = NULL;
 

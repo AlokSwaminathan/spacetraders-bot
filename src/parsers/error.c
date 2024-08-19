@@ -42,7 +42,6 @@ bool parse_error_response(struct JsonNode *root, struct ErrorResponse *error) {
 }
 
 void free_error_response(struct ErrorResponse *error) {
-  free(error->msg);
   if (error->data.start == NULL) return;
   for (size_t i = 0; i < error->data.len; i++) {
     for (size_t j = 0; j < error->data.start[i].msgs_len; j++){

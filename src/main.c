@@ -1,6 +1,13 @@
-#include "main.h"
-
 #include <curl/curl.h>
+#include <signal.h>
+
+#include "cli.h"
+#include "constants.h"
+#include "json.h"
+#include "models.h"
+#include "parsers.h"
+#include "requests.h"
+#include "util.h"
 
 static void parse_args(int argc, char** argv);
 static struct curl_slist* curl_init();
@@ -10,6 +17,10 @@ CURL* curl_hnd = NULL;
 struct CurlResponse curl_response;
 
 struct CliArgs args;
+
+char g_error_msg[ERROR_MSG_LEN];
+
+const char* g_error_json_name = DEFAULT_JSON_NAME;
 
 int main(int argc, char** argv) {
   signal(SIGINT, handle_exit);

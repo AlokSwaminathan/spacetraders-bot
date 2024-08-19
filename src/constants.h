@@ -4,6 +4,7 @@
 #include <string.h>
 
 #define MAX_RESPONSE_LEN 65536
+#define ERROR_MSG_LEN 10000
 
 #define BEARER_TOKEN_START "Authorization: Bearer "
 #define BEARER_TOKEN_START_LEN strlen(BEARER_TOKEN_START)
